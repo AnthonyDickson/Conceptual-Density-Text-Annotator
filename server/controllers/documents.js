@@ -38,6 +38,48 @@ exports.post_document = (req, res) => {
     )
 };
 
+// TODO: Use transactions for multi-step queries.
+exports.copy_document_by_id = (req, res) => {
+    const documentId = req.params.documentId;
+
+    connection.query(
+        `INSERT INTO document (title, date_edited, date_created) 
+                SELECT CONCAT(title, ' (Copy)'), date_edited, date_created
+                FROM document AS old_document
+                WHERE old_document.id = ${documentId}`,
+        (err, result) => {
+            if (err) throw err;
+
+            const insertedDocumentId = result.insertId;
+
+            connection.query(
+                `INSERT INTO document_section (document_id, section_number, title, text)  
+                SELECT ${insertedDocumentId}, section_number, title, text
+                FROM document_section AS old_document_section
+                WHERE old_document_section.document_id = ${documentId}`,
+                (err, result) => {
+                    if (err) throw err;
+
+                    if (result.affectedRows >= 0) {
+                        connection.query(
+                            `SELECT id, title, date_edited, date_created 
+                            FROM document 
+                            WHERE id = ${insertedDocumentId}`,
+                            (err, rows) => {
+                                if (err) throw err;
+
+                                res.send({document: rows[0]})
+                            }
+                        )
+                    } else {
+                        res.status(500);
+                        res.send({message: 'Insert failed.'})
+                    }
+                });
+        }
+    )
+};
+
 exports.get_document_by_id = (req, res) => {
     connection.query(
         `SELECT id, title, date_created, date_edited FROM document WHERE id = ${req.params.documentId}`,

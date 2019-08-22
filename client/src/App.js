@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {Route, Switch} from 'react-router-dom';
-import {Layout, Modal, Typography} from 'antd';
+import {Layout, message, Modal, Typography} from 'antd';
 
 import Breadcrumbs from "./views/breadcrumbs";
 import Documents from "./views/documents";
@@ -30,8 +30,8 @@ class App extends Component {
     }
 
     fetchFrom = (url, cb) => {
-            this.setState({loading: true});
-            this.numRequests++;
+        this.setState({loading: true});
+        this.numRequests++;
 
         fetch(url)
             .then(res => {
@@ -118,6 +118,42 @@ class App extends Component {
                     content: `Request to '${url}' failed. Reason: '${err.message}'.`,
                 });
                 if (cb !== undefined) cb(false);
+            });
+    };
+
+    copyDocument = (documentId) => {
+        const url = `/api/documents/${documentId}/copy`;
+        const documents = [...this.state.documents];
+
+        const document = documents.find(document => document.id === parseInt(documentId));
+        document.isCopying = true;
+
+        this.setState({documents: documents});
+
+        fetch(url, {method: 'POST'})
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                return res.json();
+            })
+            .then(res => {
+                const documents = [...this.state.documents];
+
+                const document = documents.find(document => document.id === parseInt(documentId));
+                document.isCopying = false;
+
+                documents.push(res.document);
+
+                this.setState({documents: documents});
+
+                message.success('Document Copied')
+            })
+            .catch(err => {
+                console.log(err);
+                Modal.error({
+                    title: 'Error: Could not process request!',
+                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                });
             });
     };
 
@@ -261,6 +297,7 @@ class App extends Component {
                                         dirty={this.state.dirty}
                                         fetchDocuments={this.fetchDocuments}
                                         createDocument={this.createDocument}
+                                        copyDocument={this.copyDocument}
                                         deleteDocument={this.deleteDocument}
                                         updateDocument={this.updateDocument}
                                         fetchSectionsAndAnnotations={this.fetchSectionsAndAnnotations}

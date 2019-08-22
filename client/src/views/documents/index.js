@@ -5,9 +5,11 @@ import PropTypes from "prop-types";
 import TimeAgo from "react-timeago";
 
 
-import {Button, Form, Icon, Input, List, message, Modal, Skeleton, Typography} from "antd";
+import {Button, Form, Icon, Input, List, message, Modal, Skeleton, Spin, Typography} from "antd";
 import NotFound from "../notFound";
 import DocumentView from "./documentView";
+
+import './index.css';
 
 class Documents extends Component {
     static propTypes = {
@@ -17,6 +19,7 @@ class Documents extends Component {
         annotations: PropTypes.objectOf(PropTypes.array).isRequired,
         fetchDocuments: PropTypes.func.isRequired,
         createDocument: PropTypes.func.isRequired,
+        copyDocument: PropTypes.func.isRequired,
         deleteDocument: PropTypes.func.isRequired,
         updateDocument: PropTypes.func.isRequired,
         fetchSectionsAndAnnotations: PropTypes.func.isRequired,
@@ -81,8 +84,12 @@ class Documents extends Component {
                         dataSource={documents}
                         renderItem={item => (
                             <List.Item actions={[
+                                <Spin spinning={item.isCopying === true}>
+                                    <Button onClick={() => this.props.copyDocument(item.id)}>
+                                        <Icon type="copy"/> Copy
+                                    </Button>
+                                </Spin>,
                                 <EditDocumentModal document={item} updateDocument={this.props.updateDocument}/>,
-
                                 <DeleteDocumentModal document={item} deleteDocument={this.props.deleteDocument}/>
                             ]}>
                                 <List.Item.Meta
@@ -285,6 +292,14 @@ class DeleteDocumentModal extends Component {
         confirmLoading: false,
     };
 
+
+    componentWillUnmount() {
+        this.setState({
+            confirmLoading: false,
+            visible: false
+        });
+    }
+
     showModal = () => {
         this.setState({
             visible: true,
@@ -300,6 +315,11 @@ class DeleteDocumentModal extends Component {
             if (requestOk) {
                 message.success('Document Deleted')
             }
+
+            this.setState({
+                confirmLoading: false,
+                visible: false
+            });
         });
     };
 
@@ -315,7 +335,7 @@ class DeleteDocumentModal extends Component {
         return (
             <div>
                 <Button
-                    key="document-list-delete"
+                    key={`document-list-delete-${this.props.document.id}`}
                     onClick={() => this.showModal()}
                     type="danger"
                 >
