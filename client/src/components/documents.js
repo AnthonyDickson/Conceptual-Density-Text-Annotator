@@ -1,35 +1,49 @@
 import React, {Component} from "react";
+import {Link, Route, Switch, withRouter} from "react-router-dom";
+
 import PropTypes from "prop-types";
 
 import {Button, Icon, List, Skeleton, Tooltip} from "antd";
-import {Link, Route, Switch} from "react-router-dom";
 import TimeAgo from "timeago-react";
 import NotFound from "./notFound";
+import DocumentView from "./documentView";
 
 class Documents extends Component {
     static propTypes = {
         loading: PropTypes.bool.isRequired,
         documents: PropTypes.arrayOf(PropTypes.object).isRequired,
-        refresh: PropTypes.func.isRequired,
+        fetchDocuments: PropTypes.func.isRequired,
+        sections: PropTypes.arrayOf(PropTypes.object).isRequired,
+        fetchSections: PropTypes.func.isRequired,
     };
+    getDocumentView = withRouter(({match}) => {
+        const documentId = parseInt(match.params.documentId);
 
-    handleRefresh = this.props.refresh;
+        return <DocumentView
+            loading={this.props.loading}
+            documentId={documentId}
+            documents={this.props.documents}
+            sections={this.props.sections}
+            fetchSections={this.props.fetchSections}
+        />
+    });
 
     render() {
         return (
             <Switch>
-                <Route exact path="/documents" render={this.DocumentsList}/>
+                <Route path="/documents/:documentId" component={this.getDocumentView}/>
+                <Route path="/documents" render={this.DocumentsList}/>
                 <Route component={NotFound}/>
             </Switch>
         )
     }
 
     DocumentsList = () => {
-        const {documents, loading} = this.props;
+        const {documents, loading, fetchDocuments} = this.props;
 
         return (
             <div>
-                <Button onClick={this.handleRefresh} disabled={loading} style={{margin: '5px 0'}}><Icon
+                <Button onClick={fetchDocuments} disabled={loading} style={{margin: '5px 0'}}><Icon
                     type="sync"/> Refresh</Button>
                 {loading ?
                     <List bordered>

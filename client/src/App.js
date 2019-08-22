@@ -16,6 +16,7 @@ class App extends Component {
 
     state = {
         documents: [],
+        sections: [],
         loading: false
     };
 
@@ -35,6 +36,28 @@ class App extends Component {
             })
             .then(res => {
                 this.setState({documents: res.documents});
+            })
+            .catch(err => {
+                console.log(err);
+                Modal.error({
+                    title: 'Error: Could not load data!',
+                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                });
+            }).finally(() => this.setState({loading: false}));
+    };
+
+    fetchDocumentSections = (documentId) => {
+        this.setState({loading: true});
+        const url = `/api/documents/${documentId}/sections`;
+
+        fetch(url)
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                return res.json();
+            })
+            .then(res => {
+                this.setState({sections: res.sections});
             })
             .catch(err => {
                 console.log(err);
@@ -71,11 +94,14 @@ class App extends Component {
                         <div style={{padding: 24, background: '#fff', minHeight: 360}}>
                             <Switch>
                                 <Route exact path="/" component={Index}/>
-                                <Route path="/documents" render={() =>
+                                <Route path="/documents" render={props =>
                                     <Documents
+                                        {...props}
                                         documents={this.state.documents}
+                                        sections={this.state.sections}
                                         loading={this.state.loading}
-                                        refresh={this.fetchDocuments}
+                                        fetchDocuments={this.fetchDocuments}
+                                        fetchSections={this.fetchDocumentSections}
                                     />}
                                 />
                                 <Route component={NotFound}/>
