@@ -20,7 +20,8 @@ class App extends Component {
         documents: [],
         sections: [],
         annotations: {},
-        loading: false
+        loading: false,
+        dirty: false
     };
     numRequests = 0;
 
@@ -28,9 +29,9 @@ class App extends Component {
         this.fetchDocuments()
     }
 
-    callApi = (url, cb) => {
-        this.setState({loading: true});
-        this.numRequests++;
+    fetchFrom = (url, cb) => {
+            this.setState({loading: true});
+            this.numRequests++;
 
         fetch(url)
             .then(res => {
@@ -48,7 +49,7 @@ class App extends Component {
                     content: `Request to '${url}' failed. Reason: '${err.message}'.`,
                 });
             }).finally(() => {
-                this.numRequests--;
+            this.numRequests--;
 
                 if (this.numRequests === 0) {
                     this.setState({loading: false});
@@ -58,16 +59,16 @@ class App extends Component {
     };
 
     fetchDocuments = () => {
-        this.callApi('/api/documents/', (res) => {
+        this.fetchFrom('/api/documents/', (res) => {
             this.setState({documents: res.documents});
         });
     };
 
     fetchSectionsAndAnnotations = (documentId) => {
-        this.callApi(`/api/documents/${documentId}/sections`, (res) => {
+        this.fetchFrom(`/api/documents/${documentId}/sections`, (res) => {
             const sections = res.sections;
 
-            this.callApi(`/api/documents/${documentId}/annotations`, (res) => {
+            this.fetchFrom(`/api/documents/${documentId}/annotations`, (res) => {
                 const annotations = this.groupBy(res.annotations, 'section_id');
 
                 // Make sure each section has an entry in the annotations dictionary.
@@ -80,9 +81,39 @@ class App extends Component {
                     });
                 });
 
-                this.setState({sections: sections, annotations: annotations});
+                this.setState({sections: sections, annotations: annotations, dirty: false});
             });
         });
+    };
+
+    saveChanges = () => {
+        if (this.state.sections.length === 0) {
+            return;
+        }
+
+        let documentId = this.state.sections[0].document_id;
+
+        const url = `/api/documents/${documentId}/annotations`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({annotations: this.state.annotations})
+        })
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                this.setState({dirty: false});
+            })
+            .catch(err => {
+                console.log(err);
+                Modal.error({
+                    title: 'Error: Could not load data!',
+                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                });
+            });
     };
 
     // Create a dictionary by grouping elements in an array by a giving property.
@@ -99,7 +130,7 @@ class App extends Component {
 
         newAnnotations[sectionId] = annotations;
 
-        this.setState({annotations: newAnnotations});
+        this.setState({annotations: newAnnotations, dirty: true});
     };
 
     render() {
@@ -135,9 +166,11 @@ class App extends Component {
                                         sections={this.state.sections}
                                         annotations={this.state.annotations}
                                         loading={this.state.loading}
+                                        dirty={this.state.dirty}
                                         fetchDocuments={this.fetchDocuments}
                                         fetchSectionsAndAnnotations={this.fetchSectionsAndAnnotations}
                                         updateAnnotations={this.updateAnnotations}
+                                        saveChanges={this.saveChanges}
                                     />}
                                 />
                                 <Route component={NotFound}/>

@@ -17,6 +17,8 @@ class Documents extends Component {
         fetchDocuments: PropTypes.func.isRequired,
         fetchSectionsAndAnnotations: PropTypes.func.isRequired,
         updateAnnotations: PropTypes.func.isRequired,
+        saveChanges: PropTypes.func.isRequired,
+        dirty: PropTypes.bool.isRequired,
     };
 
     getDocumentView = withRouter(({match}) => {
@@ -25,12 +27,14 @@ class Documents extends Component {
         return (
             <DocumentView
                 loading={this.props.loading}
+                dirty={this.props.dirty}
                 documentId={documentId}
                 documents={this.props.documents}
                 sections={this.props.sections}
                 annotations={this.props.annotations}
                 fetchSectionsAndAnnotations={this.props.fetchSectionsAndAnnotations}
                 updateAnnotations={this.props.updateAnnotations}
+                saveChanges={this.props.saveChanges}
             />
         )
     });

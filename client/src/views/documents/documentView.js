@@ -2,7 +2,7 @@ import React, {Component} from "react";
 
 import PropTypes from "prop-types";
 
-import {Affix, Card, Form, List, Radio, Skeleton, Typography} from "antd";
+import {Affix, Button, Card, Col, Form, List, Radio, Row, Skeleton, Typography} from "antd";
 import NotFound from "../notFound";
 import {
     A_PRIORI_CONCEPT,
@@ -23,6 +23,7 @@ const REFERENCES = 'REFERENCES';
 const RELATIONS = 'RELATIONS';
 const CATEGORIES = [ALL, CONCEPTS, REFERENCES, RELATIONS];
 
+// Confirm navigation when there are unsaved changes.
 class DocumentView extends Component {
     static propTypes = {
         loading: PropTypes.bool.isRequired,
@@ -32,6 +33,8 @@ class DocumentView extends Component {
         annotations: PropTypes.objectOf(PropTypes.array).isRequired,
         fetchSectionsAndAnnotations: PropTypes.func.isRequired,
         updateAnnotations: PropTypes.func.isRequired,
+        saveChanges: PropTypes.func.isRequired,
+        dirty: PropTypes.bool.isRequired,
     };
 
     state = {
@@ -82,6 +85,10 @@ class DocumentView extends Component {
     };
 
     componentDidMount() {
+        this.loadData();
+    }
+
+    loadData() {
         const {fetchSectionsAndAnnotations, documentId} = this.props;
 
         fetchSectionsAndAnnotations(documentId);
@@ -170,6 +177,21 @@ class DocumentView extends Component {
                                 {annotationTypeRadioButtons}
                             </Radio.Group>
                         </Form.Item>
+                        {this.props.dirty ?
+                            <Form.Item>
+                                <Row>
+                                    <Col offset={4}>
+                                        <Button
+                                            onClick={() => this.props.saveChanges()}
+                                            type="primary"
+                                            style={{marginRight: 10}}>
+                                            Save Changes
+                                        </Button>
+                                        <Button onClick={() => this.loadData()}>Discard Changes</Button>
+                                    </Col>
+                                </Row>
+                            </Form.Item>
+                            : null}
                     </Form>
                 </Card>
             </Affix>
