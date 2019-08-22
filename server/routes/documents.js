@@ -13,6 +13,7 @@ router.get('/:documentId/sections/:sectionNumber', controllers.get_document_sect
 
 // Annotations
 router.get('/:documentId/annotations', controllers.get_document_annotations);
+router.post('/:documentId/annotations', controllers.set_document_annotations);
 router.get('/:documentId/sections/:sectionNumber/annotations', controllers.get_document_annotations_by_section_number);
 
 module.exports = router;

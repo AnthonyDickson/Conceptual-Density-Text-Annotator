@@ -62,6 +62,51 @@ exports.get_document_annotations = (req, res) => {
     )
 };
 
+exports.set_document_annotations = (req, res) => {
+    const annotations = req.body.annotations;
+    const documentId = parseInt(req.params.documentId);
+    const values = [];
+
+    for (const sectionId in annotations) {
+        if (annotations.hasOwnProperty(sectionId)) {
+            const sectionIdInt = parseInt(sectionId);
+
+            values.push(...annotations[sectionId].map(annotation => {
+                return [documentId, sectionIdInt, annotation.start, annotation.end, annotation.tag];
+            }));
+        }
+    }
+
+    connection.query(
+        `DELETE FROM section_annotation WHERE document_id = ${documentId}`, (err) => {
+            if (err) throw err;
+            console.log('deleted');
+
+            connection.query(
+                'INSERT INTO section_annotation (document_id, section_id, start, end, tag) VALUES ?',
+                [values],
+                (err) => {
+                    if (err) throw err;
+
+
+                    console.log('inserted');
+
+
+                    connection.query(
+                        `UPDATE document SET date_edited = NOW() WHERE id = ${documentId}`,
+                        (err) => {
+                            if (err) throw err;
+
+                            console.log('updated');
+
+                            res.status(200);
+                            res.send();
+                        });
+                }
+            );
+        });
+};
+
 exports.get_document_annotations_by_section_number = (req, res) => {
     connection.query(
         `
