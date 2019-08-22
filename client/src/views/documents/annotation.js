@@ -7,7 +7,7 @@ export const EMERGING_CONCEPT = 'EMERGING';
 export const FORWARD_REFERENCE = 'FORWARD';
 export const BACKWARD_REFERENCE = 'BACKWARD';
 
-const TAG_COLORS = {
+export const TAG_COLOURS = {
     EMERGING: '#00ea00',
     'A PRIORI': '#dddddd',
     FORWARD: '#84d2ff',
@@ -16,22 +16,27 @@ const TAG_COLORS = {
 
 export class Annotation extends Component {
     static propTypes = {
+        annotations: PropTypes.arrayOf(PropTypes.object).isRequired,
+        updateAnnotations: PropTypes.func.isRequired,
+        sectionId: PropTypes.number.isRequired,
         text: PropTypes.string.isRequired,
         tag: PropTypes.string.isRequired,
         enabledTags: PropTypes.arrayOf(PropTypes.string).isRequired,
     };
 
     state = {
-        annotations: []
+        filteredAnnotations: []
     };
 
     handleChange = annotations => {
-        this.setState({annotations: annotations})
+        const {sectionId, updateAnnotations} = this.props;
+        updateAnnotations(sectionId, annotations);
     };
 
     render() {
-        const {enabledTags, tag, text} = this.props;
-        const filteredAnnotations = this.state.annotations.filter(annotation => enabledTags.includes(annotation.tag));
+        const {tag, text} = this.props;
+        const {enabledTags, annotations} = this.props;
+        const filteredAnnotations = annotations.filter(annotation => enabledTags.includes(annotation.tag));
 
         return (
             <div>
@@ -45,7 +50,7 @@ export class Annotation extends Component {
                     getSpan={span => ({
                         ...span,
                         tag: tag,
-                        color: TAG_COLORS[tag],
+                        color: TAG_COLOURS[tag],
                     })}
                 />
             </div>

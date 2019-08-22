@@ -12,21 +12,27 @@ class Documents extends Component {
     static propTypes = {
         loading: PropTypes.bool.isRequired,
         documents: PropTypes.arrayOf(PropTypes.object).isRequired,
-        fetchDocuments: PropTypes.func.isRequired,
         sections: PropTypes.arrayOf(PropTypes.object).isRequired,
-        fetchSections: PropTypes.func.isRequired,
+        annotations: PropTypes.objectOf(PropTypes.array).isRequired,
+        fetchDocuments: PropTypes.func.isRequired,
+        fetchSectionsAndAnnotations: PropTypes.func.isRequired,
+        updateAnnotations: PropTypes.func.isRequired,
     };
 
     getDocumentView = withRouter(({match}) => {
         const documentId = parseInt(match.params.documentId);
 
-        return <DocumentView
-            loading={this.props.loading}
-            documentId={documentId}
-            documents={this.props.documents}
-            sections={this.props.sections}
-            fetchSections={this.props.fetchSections}
-        />
+        return (
+            <DocumentView
+                loading={this.props.loading}
+                documentId={documentId}
+                documents={this.props.documents}
+                sections={this.props.sections}
+                annotations={this.props.annotations}
+                fetchSectionsAndAnnotations={this.props.fetchSectionsAndAnnotations}
+                updateAnnotations={this.props.updateAnnotations}
+            />
+        )
     });
 
     render() {

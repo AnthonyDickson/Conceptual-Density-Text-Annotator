@@ -7,6 +7,8 @@ import Documents from "./views/documents";
 import Index from "./views/index";
 import NotFound from "./views/notFound";
 import SideMenu from "./views/sideMenu";
+import {TAG_COLOURS} from "./views/documents/annotation";
+
 
 import './App.css';
 
@@ -17,16 +19,18 @@ class App extends Component {
     state = {
         documents: [],
         sections: [],
+        annotations: {},
         loading: false
     };
+    numRequests = 0;
 
     componentDidMount() {
         this.fetchDocuments()
     }
 
-    fetchDocuments = () => {
+    callApi = (url, cb) => {
         this.setState({loading: true});
-        const url = '/api/documents/';
+        this.numRequests++;
 
         fetch(url)
             .then(res => {
@@ -35,7 +39,7 @@ class App extends Component {
                 return res.json();
             })
             .then(res => {
-                this.setState({documents: res.documents});
+                cb(res);
             })
             .catch(err => {
                 console.log(err);
@@ -43,29 +47,59 @@ class App extends Component {
                     title: 'Error: Could not load data!',
                     content: `Request to '${url}' failed. Reason: '${err.message}'.`,
                 });
-            }).finally(() => this.setState({loading: false}));
+            }).finally(() => {
+                this.numRequests--;
+
+                if (this.numRequests === 0) {
+                    this.setState({loading: false});
+                }
+            }
+        );
     };
 
-    fetchDocumentSections = (documentId) => {
-        this.setState({loading: true});
-        const url = `/api/documents/${documentId}/sections`;
+    fetchDocuments = () => {
+        this.callApi('/api/documents/', (res) => {
+            this.setState({documents: res.documents});
+        });
+    };
 
-        fetch(url)
-            .then(res => {
-                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+    fetchSectionsAndAnnotations = (documentId) => {
+        this.callApi(`/api/documents/${documentId}/sections`, (res) => {
+            const sections = res.sections;
 
-                return res.json();
-            })
-            .then(res => {
-                this.setState({sections: res.sections});
-            })
-            .catch(err => {
-                console.log(err);
-                Modal.error({
-                    title: 'Error: Could not load data!',
-                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+            this.callApi(`/api/documents/${documentId}/annotations`, (res) => {
+                const annotations = this.groupBy(res.annotations, 'section_id');
+
+                // Make sure each section has an entry in the annotations dictionary.
+                sections.forEach(section => {
+                    annotations[section.id] = annotations[section.id] || [];
+
+                    // Restore the annotation colour.
+                    annotations[section.id].forEach(annotation => {
+                        annotation.color = TAG_COLOURS[annotation.tag];
+                    });
                 });
-            }).finally(() => this.setState({loading: false}));
+
+                this.setState({sections: sections, annotations: annotations});
+            });
+        });
+    };
+
+    // Create a dictionary by grouping elements in an array by a giving property.
+    groupBy = (array, property) => {
+        return array.reduce(function (dict, element) {
+            (dict[element[property]] = dict[element[property]] || []).push(element);
+
+            return dict;
+        }, {});
+    };
+
+    updateAnnotations = (sectionId, annotations) => {
+        let newAnnotations = Object.assign({}, this.state.annotations);
+
+        newAnnotations[sectionId] = annotations;
+
+        this.setState({annotations: newAnnotations});
     };
 
     render() {
@@ -99,9 +133,11 @@ class App extends Component {
                                         {...props}
                                         documents={this.state.documents}
                                         sections={this.state.sections}
+                                        annotations={this.state.annotations}
                                         loading={this.state.loading}
                                         fetchDocuments={this.fetchDocuments}
-                                        fetchSections={this.fetchDocumentSections}
+                                        fetchSectionsAndAnnotations={this.fetchSectionsAndAnnotations}
+                                        updateAnnotations={this.updateAnnotations}
                                     />}
                                 />
                                 <Route component={NotFound}/>

@@ -16,7 +16,9 @@ class DocumentView extends Component {
         documentId: PropTypes.number.isRequired,
         documents: PropTypes.arrayOf(PropTypes.object).isRequired,
         sections: PropTypes.arrayOf(PropTypes.object).isRequired,
-        fetchSections: PropTypes.func.isRequired,
+        annotations: PropTypes.objectOf(PropTypes.array).isRequired,
+        fetchSectionsAndAnnotations: PropTypes.func.isRequired,
+        updateAnnotations: PropTypes.func.isRequired,
     };
 
     state = {
@@ -41,7 +43,7 @@ class DocumentView extends Component {
         this.setState(newState);
     };
 
-    onChange = checkedList => {
+    onCheckChange = checkedList => {
         this.setState({
             checkedList,
             indeterminate: !!checkedList.length && checkedList.length < plainOptions.length,
@@ -58,9 +60,9 @@ class DocumentView extends Component {
     };
 
     componentDidMount() {
-        const {fetchSections, documentId} = this.props;
+        const {fetchSectionsAndAnnotations, documentId} = this.props;
 
-        fetchSections(documentId)
+        fetchSectionsAndAnnotations(documentId);
     }
 
     render() {
@@ -79,6 +81,7 @@ class DocumentView extends Component {
             );
         } else if (documentExists) {
             const {tag, checkedList} = this.state;
+            const {annotations, updateAnnotations} = this.props;
 
             return (
                 <div>
@@ -91,7 +94,14 @@ class DocumentView extends Component {
                             <List.Item>
                                 <Typography>
                                     <Typography.Title>{item.title}</Typography.Title>
-                                    <Annotation text={item.text} tag={tag} enabledTags={checkedList}/>
+                                    <Annotation
+                                        text={item.text}
+                                        tag={tag}
+                                        enabledTags={checkedList}
+                                        sectionId={item.id}
+                                        annotations={annotations[item.id]}
+                                        updateAnnotations={updateAnnotations}
+                                    />
                                 </Typography>
                             </List.Item>
                         )}
@@ -126,7 +136,7 @@ class DocumentView extends Component {
                             <Checkbox.Group
                                 options={plainOptions}
                                 value={this.state.checkedList}
-                                onChange={this.onChange}
+                                onChange={this.onCheckChange}
                             />
                         </Form.Item>
                         <Form.Item label="Annotation Type" {...formLayout}>
