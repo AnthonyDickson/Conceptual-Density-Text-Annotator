@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 
 import {Button, Icon, List, Skeleton, Tooltip} from "antd";
 import TimeAgo from "timeago-react";
-import NotFound from "./notFound";
+import NotFound from "../notFound";
 import DocumentView from "./documentView";
 
 class Documents extends Component {
@@ -16,6 +16,7 @@ class Documents extends Component {
         sections: PropTypes.arrayOf(PropTypes.object).isRequired,
         fetchSections: PropTypes.func.isRequired,
     };
+
     getDocumentView = withRouter(({match}) => {
         const documentId = parseInt(match.params.documentId);
 

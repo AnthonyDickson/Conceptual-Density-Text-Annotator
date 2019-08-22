@@ -2,11 +2,11 @@ import React, {Component} from 'react';
 import {Route, Switch} from 'react-router-dom';
 import {Layout, Modal, Typography} from 'antd';
 
-import Breadcrumbs from "./components/breadcrumbs";
-import Documents from "./components/documents";
-import Index from "./components/index";
-import NotFound from "./components/notFound";
-import SideMenu from "./components/sideMenu";
+import Breadcrumbs from "./views/breadcrumbs";
+import Documents from "./views/documents";
+import Index from "./views/index";
+import NotFound from "./views/notFound";
+import SideMenu from "./views/sideMenu";
 
 import './App.css';
 
