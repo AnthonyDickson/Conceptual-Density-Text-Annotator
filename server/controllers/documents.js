@@ -47,3 +47,42 @@ exports.get_document_section = (req, res) => {
         }
     )
 };
+
+
+exports.get_document_annotations = (req, res) => {
+    connection.query(
+        `SELECT id, document_id, section_id, start, end, tag
+        FROM section_annotation 
+        WHERE document_id = ${req.params.documentId}`,
+        (err, rows) => {
+            if (err) throw err;
+
+            res.send({annotations: rows});
+        }
+    )
+};
+
+exports.get_document_annotations_by_section_number = (req, res) => {
+    connection.query(
+        `
+        SELECT id, document_id, section_id, start, end, tag 
+        FROM section_annotation 
+        WHERE 
+            document_id = ${req.params.documentId} 
+                AND 
+            section_id = ( 
+                SELECT document_section.id 
+                FROM document_section 
+                WHERE 
+                    document_section.document_id = ${req.params.documentId} 
+                        AND 
+                    document_section.section_number = ${req.params.sectionNumber} 
+            )
+        `,
+        (err, rows) => {
+            if (err) throw err;
+
+            res.send({annotations: rows});
+        }
+    )
+};
