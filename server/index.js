@@ -1,6 +1,3 @@
-require('dotenv').config();
-require('./connection').connection.connect();
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
