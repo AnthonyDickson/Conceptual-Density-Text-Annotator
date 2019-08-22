@@ -86,6 +86,98 @@ class App extends Component {
         });
     };
 
+    createDocument = (document, cb) => {
+        const url = `/api/documents`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({document: document})
+        })
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                return res.json();
+            })
+            .then(res => {
+                console.log(res);
+                const documents = [...this.state.documents];
+
+                documents.push(res.document);
+
+                this.setState({documents: documents});
+
+                if (cb !== undefined) cb(true);
+            })
+            .catch(err => {
+                console.log(err);
+                Modal.error({
+                    title: 'Error: Could not process request!',
+                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                });
+                if (cb !== undefined) cb(false);
+            });
+    };
+
+    updateDocument = (document, cb) => {
+        const url = `/api/documents/${document.id}`;
+
+        fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({document: document})
+        })
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                const documents = [...this.state.documents];
+
+                const documentIndex = documents.findIndex(theDocument => theDocument.id === document.id);
+
+                if (documentIndex >= 0) {
+                    documents[documentIndex] = document;
+                }
+
+                this.setState({documents: documents});
+                if (cb !== undefined) cb(true);
+            })
+            .catch(err => {
+                console.log(err);
+                Modal.error({
+                    title: 'Error: Could not process request!',
+                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                });
+                if (cb !== undefined) cb(false);
+            });
+    };
+
+    deleteDocument = (documentId, cb) => {
+        const url = `/api/documents/${documentId}`;
+
+        fetch(url, {method: 'DELETE'})
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                const documentIdInt = parseInt(documentId);
+
+                this.setState({documents: this.state.documents.filter(document => document.id !== documentIdInt)});
+
+                if (cb !== undefined) cb(true);
+            })
+            .catch(err => {
+                console.log(err);
+                Modal.error({
+                    title: 'Error: Could not process request!',
+                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                });
+                if (cb !== undefined) cb(false);
+            });
+    };
+
     saveChanges = () => {
         if (this.state.sections.length === 0) {
             return;
@@ -110,7 +202,7 @@ class App extends Component {
             .catch(err => {
                 console.log(err);
                 Modal.error({
-                    title: 'Error: Could not load data!',
+                    title: 'Error: Could not process request!',
                     content: `Request to '${url}' failed. Reason: '${err.message}'.`,
                 });
             });
@@ -168,6 +260,9 @@ class App extends Component {
                                         loading={this.state.loading}
                                         dirty={this.state.dirty}
                                         fetchDocuments={this.fetchDocuments}
+                                        createDocument={this.createDocument}
+                                        deleteDocument={this.deleteDocument}
+                                        updateDocument={this.updateDocument}
                                         fetchSectionsAndAnnotations={this.fetchSectionsAndAnnotations}
                                         updateAnnotations={this.updateAnnotations}
                                         saveChanges={this.saveChanges}

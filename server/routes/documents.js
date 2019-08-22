@@ -5,7 +5,10 @@ var controllers = require('../controllers/documents');
 
 // Documents
 router.get('/', controllers.get_documents);
+router.post('/', controllers.post_document);
 router.get('/:documentId', controllers.get_document_by_id);
+router.put('/:documentId', controllers.put_document_by_id);
+router.delete('/:documentId', controllers.delete_document_by_id);
 
 // Sections
 router.get('/:documentId/sections', controllers.get_document_sections);

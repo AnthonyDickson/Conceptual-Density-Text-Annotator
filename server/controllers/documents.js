@@ -8,6 +8,36 @@ exports.get_documents = (req, res) => {
     })
 };
 
+exports.post_document = (req, res) => {
+    const document = req.body.document;
+
+    connection.query(
+        `INSERT INTO document (title) VALUES ('${document.title}')`,
+        (err, insertResult) => {
+            if (err) throw err;
+
+            if (insertResult.affectedRows === 0) {
+                res.status(500);
+                res.send({message: 'Insert failed.'});
+            } else {
+                connection.query(
+                    `SELECT id, title, date_created, date_edited 
+                     FROM document 
+                     WHERE id = ${insertResult.insertId}`,
+                    (err, selectResult) => {
+                        if (err) throw err;
+
+                        console.log(selectResult);
+                        console.log({message: 'ok', document: selectResult[0]});
+
+                        res.status(200);
+                        res.send({message: 'ok', document: selectResult[0]});
+                    });
+            }
+        }
+    )
+};
+
 exports.get_document_by_id = (req, res) => {
     connection.query(
         `SELECT id, title, date_created, date_edited FROM document WHERE id = ${req.params.documentId}`,
@@ -15,6 +45,38 @@ exports.get_document_by_id = (req, res) => {
             if (err) throw err;
 
             res.send({document: rows[0]});
+        }
+    )
+};
+
+exports.put_document_by_id = (req, res) => {
+    const document = req.body.document;
+
+    connection.query(
+        `UPDATE document SET title = '${document.title}', date_edited = NOW() WHERE id = ${req.params.documentId}`,
+        (err, result) => {
+            if (err) throw err;
+
+            if (result.affectedRows === 0) {
+                res.status(500);
+                res.send({message: 'Update failed.'});
+            } else {
+                res.status(200);
+                res.send({message: 'ok'});
+            }
+        }
+    )
+};
+
+exports.delete_document_by_id = (req, res) => {
+    connection.query(
+        // language=MySQL
+        `DELETE FROM document WHERE id = ${req.params.documentId}`,
+        (err) => {
+            if (err) throw err;
+
+            res.status(200);
+            res.send({message: 'ok'});
         }
     )
 };
