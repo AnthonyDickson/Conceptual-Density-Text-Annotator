@@ -2,13 +2,26 @@ import React, {Component} from "react";
 
 import PropTypes from "prop-types";
 
-import {Affix, Card, Checkbox, Form, List, Radio, Skeleton, Typography} from "antd";
+import {Affix, Card, Form, List, Radio, Skeleton, Typography} from "antd";
 import NotFound from "../notFound";
-import {A_PRIORI_CONCEPT, Annotation, BACKWARD_REFERENCE, EMERGING_CONCEPT, FORWARD_REFERENCE} from "./annotation";
+import {
+    A_PRIORI_CONCEPT,
+    Annotation,
+    BACKWARD_REFERENCE,
+    EMERGING_CONCEPT,
+    ENTITY,
+    FORWARD_REFERENCE,
+    RELATION
+} from "./annotation";
 
 
-const plainOptions = [A_PRIORI_CONCEPT, EMERGING_CONCEPT, FORWARD_REFERENCE, BACKWARD_REFERENCE];
-const defaultCheckedList = [A_PRIORI_CONCEPT, EMERGING_CONCEPT];
+const ANNOTATION_TYPES = [A_PRIORI_CONCEPT, EMERGING_CONCEPT, FORWARD_REFERENCE, BACKWARD_REFERENCE, ENTITY, RELATION];
+
+const ALL = 'ALL';
+const CONCEPTS = 'CONCEPTS';
+const REFERENCES = 'REFERENCES';
+const RELATIONS = 'RELATIONS';
+const CATEGORIES = [ALL, CONCEPTS, REFERENCES, RELATIONS];
 
 class DocumentView extends Component {
     static propTypes = {
@@ -23,9 +36,8 @@ class DocumentView extends Component {
 
     state = {
         tag: A_PRIORI_CONCEPT,
-        checkedList: defaultCheckedList,
-        indeterminate: true,
-        checkAll: false,
+        category: ALL,
+        checkedList: ANNOTATION_TYPES,
     };
 
     handleTagChange = e => {
@@ -43,20 +55,30 @@ class DocumentView extends Component {
         this.setState(newState);
     };
 
-    onCheckChange = checkedList => {
-        this.setState({
-            checkedList,
-            indeterminate: !!checkedList.length && checkedList.length < plainOptions.length,
-            checkAll: checkedList.length === plainOptions.length,
-        });
-    };
+    handleCategoryChange = e => {
+        const nextState = {};
+        nextState.category = e.target.value;
 
-    onCheckAllChange = e => {
-        this.setState({
-            checkedList: e.target.checked ? plainOptions : [],
-            indeterminate: false,
-            checkAll: e.target.checked,
-        });
+        switch (nextState.category) {
+            case ALL:
+                nextState.checkedList = ANNOTATION_TYPES;
+                break;
+            case CONCEPTS:
+                nextState.checkedList = [A_PRIORI_CONCEPT, EMERGING_CONCEPT];
+                break;
+            case REFERENCES:
+                nextState.checkedList = [FORWARD_REFERENCE, BACKWARD_REFERENCE];
+                break;
+            case RELATIONS:
+                nextState.checkedList = [ENTITY, RELATION];
+                break;
+            default:
+                // Nothing needs to be done here.
+                break;
+        }
+
+        nextState.tag = nextState.checkedList[0];
+        this.setState(nextState)
     };
 
     componentDidMount() {
@@ -119,35 +141,33 @@ class DocumentView extends Component {
             wrapperCol: {span: 14},
         };
 
+        const annotationTypeRadioButtons = this.state.checkedList.map(option => {
+            return <Radio.Button key={option} value={option}>{option}</Radio.Button>
+        });
+
+        const categoryRadioButtons = CATEGORIES.map(option => {
+            return <Radio.Button key={option} value={option}>{option}</Radio.Button>
+        });
+
         return (
             <Affix>
                 <Card>
                     <Form>
                         <Form.Item label="Filter Tags" {...formLayout}>
-                            <div style={{borderBottom: '1px solid #E9E9E9'}}>
-                                <Checkbox
-                                    indeterminate={this.state.indeterminate}
-                                    onChange={this.onCheckAllChange}
-                                    checked={this.state.checkAll}
-                                >
-                                    Toggle all
-                                </Checkbox>
-                            </div>
-                            <Checkbox.Group
-                                options={plainOptions}
-                                value={this.state.checkedList}
-                                onChange={this.onCheckChange}
-                            />
+                            <Radio.Group
+                                onChange={this.handleCategoryChange}
+                                defaultValue={ALL}
+                                value={this.state.category}
+                            >
+                                {categoryRadioButtons}
+                            </Radio.Group>
                         </Form.Item>
                         <Form.Item label="Annotation Type" {...formLayout}>
                             <Radio.Group
                                 onChange={this.handleTagChange}
                                 defaultValue={A_PRIORI_CONCEPT}
                                 value={this.state.tag}>
-                                <Radio.Button value={A_PRIORI_CONCEPT}>A PRIORI</Radio.Button>
-                                <Radio.Button value={EMERGING_CONCEPT}>EMERGING</Radio.Button>
-                                <Radio.Button value={FORWARD_REFERENCE}>FORWARD</Radio.Button>
-                                <Radio.Button value={BACKWARD_REFERENCE}>BACKWARD</Radio.Button>
+                                {annotationTypeRadioButtons}
                             </Radio.Group>
                         </Form.Item>
                     </Form>

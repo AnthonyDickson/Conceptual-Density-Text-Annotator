@@ -6,12 +6,16 @@ export const A_PRIORI_CONCEPT = 'A PRIORI';
 export const EMERGING_CONCEPT = 'EMERGING';
 export const FORWARD_REFERENCE = 'FORWARD';
 export const BACKWARD_REFERENCE = 'BACKWARD';
+export const ENTITY = 'ENTITY';
+export const RELATION = 'RELATION';
 
 export const TAG_COLOURS = {
     EMERGING: '#00ea00',
     'A PRIORI': '#dddddd',
     FORWARD: '#84d2ff',
-    BACKWARD: '#ed0000'
+    BACKWARD: '#ed0000',
+    ENTITY: '#fff980',
+    RELATION: '#e5a0ed',
 };
 
 export class Annotation extends Component {
