@@ -2,9 +2,10 @@ import React, {Component} from "react";
 import {Link, Route, Switch, withRouter} from "react-router-dom";
 
 import PropTypes from "prop-types";
+import TimeAgo from "react-timeago";
 
-import {Button, Icon, List, Skeleton, Tooltip} from "antd";
-import TimeAgo from "timeago-react";
+
+import {Button, Icon, List, Skeleton} from "antd";
 import NotFound from "../notFound";
 import DocumentView from "./documentView";
 
@@ -52,6 +53,11 @@ class Documents extends Component {
     DocumentsList = () => {
         const {documents, loading, fetchDocuments} = this.props;
 
+        // TODO: Fix time display
+        const dateConversion = (timeStamp) => {
+            return new Date(timeStamp)
+        };
+
         return (
             <div>
                 <Button onClick={fetchDocuments} disabled={loading} style={{margin: '5px 0'}}><Icon
@@ -70,13 +76,9 @@ class Documents extends Component {
                             <List.Item>
                                 <Link to={`/documents/${item.id}`}>{item.title}</Link>
                                 {' - Created: '}
-                                <Tooltip title={new Date(item.date_created).toLocaleString()}>
-                                    <TimeAgo datetime={item.date_created}/>
-                                </Tooltip>
+                                <TimeAgo date={dateConversion(item.date_created)}/>
                                 {' - Edited: '}
-                                <Tooltip title={new Date(item.date_edited).toLocaleString()}>
-                                    <TimeAgo datetime={item.date_edited}/>
-                                </Tooltip>
+                                <TimeAgo date={dateConversion(item.date_edited)}/>
                             </List.Item>
                         )}
                     />
