@@ -25,6 +25,7 @@ class Documents extends Component {
         fetchSectionsAndAnnotations: PropTypes.func.isRequired,
         addSection: PropTypes.func.isRequired,
         updateSection: PropTypes.func.isRequired,
+        deleteSection: PropTypes.func.isRequired,
         updateAnnotations: PropTypes.func.isRequired,
         saveChanges: PropTypes.func.isRequired,
         dirty: PropTypes.bool.isRequired,
@@ -44,6 +45,7 @@ class Documents extends Component {
                 fetchSectionsAndAnnotations={this.props.fetchSectionsAndAnnotations}
                 addSection={this.props.addSection}
                 updateSection={this.props.updateSection}
+                deleteSection={this.props.deleteSection}
                 updateAnnotations={this.props.updateAnnotations}
                 saveChanges={this.props.saveChanges}
             />

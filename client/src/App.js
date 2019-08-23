@@ -87,20 +87,34 @@ class App extends Component {
     };
 
     addSection = () => {
-        // addSection = withRouter(({match}) => {
-        // const documentId = match.params.documentId;
         const sections = [...this.state.sections];
-        const nextId = sections.length === 0 ? 1 : sections[sections.length - 1].id + 1;
-        console.log(nextId);
+        const url = '/api/sections/nextId';
+        const hideLoadingMessage = message.loading('Fetching new section ID...', 0);
 
-        // sections.push({id: nextId, document_id: parseInt(documentId), title: 'title', text: 'text'});
-        sections.push({id: nextId, title: 'title', text: 'text'});
+        fetch(url)
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
 
-        const annotations = Object.assign({}, this.state.annotations);
-        annotations[nextId] = [];
+                return res.json();
+            })
+            .then(res => {
+                const nextId = parseInt(res.nextId);
 
-        this.setState({sections: sections, annotations: annotations, dirty: true});
-        // });
+                sections.push({id: nextId, title: 'title', text: 'text'});
+
+                const annotations = Object.assign({}, this.state.annotations);
+                annotations[nextId] = [];
+
+                this.setState({sections: sections, annotations: annotations, dirty: true});
+            })
+            .catch(err => {
+                console.log(err);
+                Modal.error({
+                    title: 'Error: Could not add section!',
+                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                })
+            })
+            .finally(() => hideLoadingMessage());
     };
 
     updateSection = section => {
@@ -112,6 +126,17 @@ class App extends Component {
         }
 
         this.setState({sections: sections, dirty: true});
+    };
+
+    deleteSection = sectionId => {
+        let sections = [...this.state.sections];
+
+        let annotations = Object.assign({}, this.state.annotations);
+        annotations[sectionId] = [];
+
+        sections = sections.filter(theSection => theSection.id !== sectionId);
+
+        this.setState({sections: sections, annotations: annotations, dirty: true});
     };
 
     createDocument = (document, cb) => {
@@ -243,17 +268,10 @@ class App extends Component {
     };
 
     saveChanges = documentId => {
-        if (this.state.sections.length === 0) {
-            return;
-        }
-
         const hideLoadingMessage = message.loading('Saving changes...', 0);
 
         const sections = this.state.sections;
         const annotations = this.state.annotations;
-
-        console.log(sections);
-        console.log(annotations);
 
         let url = `/api/documents/${documentId}/sections`;
 
@@ -291,61 +309,6 @@ class App extends Component {
                 });
             }).finally(() => hideLoadingMessage());
     };
-
-    // saveChanges = documentId => {
-    //     if (this.state.sections.length === 0) {
-    //         return;
-    //     }
-    //
-    //     const hideLoadingMessage = message.loading('Saving changes...', 0);
-    //
-    //     const annotations = this.state.annotations;
-    //     const sections = this.state.sections;
-    //
-    //     let url = `/api/documents/${documentId}/sections`;
-    //
-    //     fetch(url, {
-    //         method: 'PATCH',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         },
-    //         body: JSON.stringify({sections: sections})
-    //     })
-    //         .then(res => {
-    //             this.fetchFrom(`/api/documents/${documentId}/sections`, (res) => {
-    //                 const sections = res.sections;
-    //             }).then(res => {
-    //                 return res.json();
-    //             }).then(res => {
-    //                 if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
-    //
-    //                 let url = `/api/documents/${documentId}/annotations`;
-    //
-    //                 fetch(url, {
-    //                     method: 'PATCH',
-    //                     headers: {
-    //                         'Content-Type': 'application/json'
-    //                     },
-    //                     body: JSON.stringify({annotations: annotations})
-    //                 })
-    //                     .then(res => {
-    //                         if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
-    //
-    //                         this.setState({dirty: false});
-    //                         message.success('Changes Saved')
-    //                     });
-    //             });
-    //
-    //
-    //         })
-    //         .catch(err => {
-    //             console.log(err);
-    //             Modal.error({
-    //                 title: 'Error: Could not process request!',
-    //                 content: `Request to '${url}' failed. Reason: '${err.message}'.`,
-    //             });
-    //         }).finally(() => hideLoadingMessage());
-    // };
 
 
     // Create a dictionary by grouping elements in an array by a giving property.
@@ -407,6 +370,7 @@ class App extends Component {
                                         fetchSectionsAndAnnotations={this.fetchSectionsAndAnnotations}
                                         addSection={this.addSection}
                                         updateSection={this.updateSection}
+                                        deleteSection={this.deleteSection}
                                         updateAnnotations={this.updateAnnotations}
                                         saveChanges={this.saveChanges}
                                     />}

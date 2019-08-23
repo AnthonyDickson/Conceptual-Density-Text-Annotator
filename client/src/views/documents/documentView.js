@@ -2,7 +2,7 @@ import React, {Component} from "react";
 
 import PropTypes from "prop-types";
 
-import {Affix, Button, Card, Col, Drawer, Form, Icon, Input, List, Radio, Row, Skeleton, Typography} from "antd";
+import {Affix, Button, Card, Col, Drawer, Form, Icon, Input, List, Modal, Radio, Row, Skeleton, Typography} from "antd";
 import NotFound from "../notFound";
 import {
     A_PRIORI_CONCEPT,
@@ -34,6 +34,7 @@ class DocumentView extends Component {
         fetchSectionsAndAnnotations: PropTypes.func.isRequired,
         addSection: PropTypes.func.isRequired,
         updateSection: PropTypes.func.isRequired,
+        deleteSection: PropTypes.func.isRequired,
         updateAnnotations: PropTypes.func.isRequired,
         saveChanges: PropTypes.func.isRequired,
         dirty: PropTypes.bool.isRequired,
@@ -168,7 +169,7 @@ class DocumentView extends Component {
             );
         } else if (documentExists) {
             const {tag, checkedList} = this.state;
-            const {annotations, updateAnnotations, updateSection} = this.props;
+            const {annotations, updateAnnotations, updateSection, deleteSection} = this.props;
 
             return (
                 <div>
@@ -181,10 +182,16 @@ class DocumentView extends Component {
                             <List.Item>
                                 <Typography>
                                     <Typography.Title>
-                                        <span>
+                                            <span style={{
+                                                margin: '5px',
+                                                position: "absolute",
+                                                right: 5,
+                                                display: "inline"
+                                            }}>
+                                                <EditSectionDrawer section={item} updateSection={updateSection}/>
+                                                <DeleteSectionModal section={item} deleteSection={deleteSection}/>
+                                            </span>
                                             {item.title}
-                                            <EditSectionDrawer section={item} updateSection={updateSection}/>
-                                        </span>
                                     </Typography.Title>
                                     <Annotation
                                         text={item.text}
@@ -257,8 +264,7 @@ class EditSectionDrawer extends Component {
     render() {
         return (
             <div>
-                <Button onClick={this.showDrawer} type="dashed"
-                        style={{margin: '5px', position: "absolute", right: 5, top: 5, display: "inline"}}>
+                <Button onClick={this.showDrawer} type="dashed">
                     <Icon type="edit"/> Edit
                 </Button>
                 <Drawer
@@ -289,6 +295,73 @@ class EditSectionDrawer extends Component {
                         </Form.Item>
                     </Form>
                 </Drawer>
+            </div>
+        );
+    }
+}
+
+class DeleteSectionModal extends Component {
+    static propTypes = {
+        section: PropTypes.object.isRequired,
+        deleteSection: PropTypes.func.isRequired,
+    };
+
+    state = {
+        visible: false,
+    };
+
+
+    componentWillUnmount() {
+        this.setState({
+            confirmLoading: false,
+            visible: false
+        });
+    }
+
+    showModal = () => {
+        this.setState({
+            visible: true,
+        });
+    };
+
+    handleOk = () => {
+        this.props.deleteSection(this.props.section.id);
+
+        this.setState({visible: false})
+    };
+
+    handleCancel = () => {
+        this.setState({
+            visible: false,
+        });
+    };
+
+    render() {
+        const {visible} = this.state;
+
+        return (
+            <div>
+                <Button
+                    key={`section-list-delete-${this.props.section.id}`}
+                    onClick={() => this.showModal()}
+                    type="danger"
+                >
+                    <Icon type="delete"/> Delete
+                </Button>
+                <Modal
+                    title={<span><Icon type="delete"/> Delete Section</span>}
+                    visible={visible}
+                    onOk={this.handleOk}
+                    onCancel={this.handleCancel}
+                    okText="Yes"
+                    okType="danger"
+                    cancelText="No"
+                    destroyOnClose={true}
+                >
+                    <Typography.Paragraph>
+                        Are you sure you want to delete this section?
+                    </Typography.Paragraph>
+                </Modal>
             </div>
         );
     }
