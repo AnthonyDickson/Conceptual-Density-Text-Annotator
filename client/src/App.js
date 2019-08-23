@@ -98,7 +98,7 @@ class App extends Component {
                 return res.json();
             })
             .then(res => {
-                const nextId = parseInt(res.nextId);
+                const nextId = parseInt(res.nextId) + this.state.sections.length;
 
                 sections.push({id: nextId, title: 'title', text: 'text'});
 

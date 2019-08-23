@@ -181,7 +181,6 @@ class DocumentView extends Component {
                         renderItem={item => (
                             <List.Item>
                                 <Typography>
-                                    <Typography.Title>
                                             <span style={{
                                                 margin: '5px',
                                                 position: "absolute",
@@ -191,6 +190,7 @@ class DocumentView extends Component {
                                                 <EditSectionDrawer section={item} updateSection={updateSection}/>
                                                 <DeleteSectionModal section={item} deleteSection={deleteSection}/>
                                             </span>
+                                    <Typography.Title>
                                             {item.title}
                                     </Typography.Title>
                                     <Annotation
@@ -287,6 +287,7 @@ class EditSectionDrawer extends Component {
                                 placeholder="Section Text"
                                 onChange={e => this.setState({text: e.target.value})}
                                 defaultValue={this.props.section.text}
+                                autosize={{minRows: 6, maxRows: 24}}
                             />
                         </Form.Item>
                         <Form.Item>
