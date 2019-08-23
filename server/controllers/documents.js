@@ -136,6 +136,36 @@ exports.get_document_sections = (req, res) => {
     )
 };
 
+
+exports.set_document_sections = (req, res) => {
+    const sections = req.body.sections;
+    const documentId = parseInt(req.params.documentId);
+    const values = [];
+
+    values.push(...sections.map((section, index) => {
+        return [section.id, documentId, index + 1, section.title, section.text];
+    }));
+
+    connection.query(
+        `DELETE FROM document_section WHERE document_id = ${documentId}`, (err) => {
+            if (err) throw err;
+
+            if (values.length === 0) {
+                updateDocumentTimeStamp(documentId, res);
+            } else {
+                connection.query(
+                    'INSERT INTO document_section (id, document_id, section_number, title, text) VALUES ?',
+                    [values],
+                    (err) => {
+                        if (err) throw err;
+
+                        updateDocumentTimeStamp(documentId, res);
+                    }
+                );
+            }
+        });
+};
+
 exports.get_document_section = (req, res) => {
     connection.query(
         `SELECT id, document_id, section_number, title, text
@@ -166,6 +196,17 @@ exports.get_document_annotations = (req, res) => {
     )
 };
 
+function updateDocumentTimeStamp(documentId, res) {
+    connection.query(
+        `UPDATE document SET date_edited = NOW() WHERE id = ${documentId}`,
+        (err) => {
+            if (err) throw err;
+
+            res.status(200);
+            res.send();
+        });
+}
+
 exports.set_document_annotations = (req, res) => {
     const annotations = req.body.annotations;
     const documentId = parseInt(req.params.documentId);
@@ -184,30 +225,20 @@ exports.set_document_annotations = (req, res) => {
     connection.query(
         `DELETE FROM section_annotation WHERE document_id = ${documentId}`, (err) => {
             if (err) throw err;
-            console.log('deleted');
 
-            connection.query(
-                'INSERT INTO section_annotation (document_id, section_id, start, end, tag) VALUES ?',
-                [values],
-                (err) => {
-                    if (err) throw err;
+            if (values.length === 0) {
+                updateDocumentTimeStamp(documentId, res);
+            } else {
+                connection.query(
+                    'INSERT INTO section_annotation (document_id, section_id, start, end, tag) VALUES ?',
+                    [values],
+                    (err) => {
+                        if (err) throw err;
 
-
-                    console.log('inserted');
-
-
-                    connection.query(
-                        `UPDATE document SET date_edited = NOW() WHERE id = ${documentId}`,
-                        (err) => {
-                            if (err) throw err;
-
-                            console.log('updated');
-
-                            res.status(200);
-                            res.send();
-                        });
-                }
-            );
+                        updateDocumentTimeStamp(documentId, res);
+                    }
+                );
+            }
         });
 };
 

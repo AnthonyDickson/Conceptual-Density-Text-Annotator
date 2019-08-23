@@ -23,6 +23,8 @@ class Documents extends Component {
         deleteDocument: PropTypes.func.isRequired,
         updateDocument: PropTypes.func.isRequired,
         fetchSectionsAndAnnotations: PropTypes.func.isRequired,
+        addSection: PropTypes.func.isRequired,
+        updateSection: PropTypes.func.isRequired,
         updateAnnotations: PropTypes.func.isRequired,
         saveChanges: PropTypes.func.isRequired,
         dirty: PropTypes.bool.isRequired,
@@ -40,6 +42,8 @@ class Documents extends Component {
                 sections={this.props.sections}
                 annotations={this.props.annotations}
                 fetchSectionsAndAnnotations={this.props.fetchSectionsAndAnnotations}
+                addSection={this.props.addSection}
+                updateSection={this.props.updateSection}
                 updateAnnotations={this.props.updateAnnotations}
                 saveChanges={this.props.saveChanges}
             />
@@ -203,7 +207,7 @@ class EditDocumentModal extends Component {
     };
 
     state = {
-        modalText: this.props.document.title,
+        text: this.props.document.title,
         visible: false,
         confirmLoading: false,
     };
@@ -219,7 +223,7 @@ class EditDocumentModal extends Component {
             confirmLoading: true,
         });
 
-        const document = Object.assign({}, this.props.document, {title: this.state.modalText});
+        const document = Object.assign({}, this.props.document, {title: this.state.text});
         this.props.updateDocument(document, (requestOk) => {
             if (requestOk) {
                 message.success('Document Title Updated')
@@ -235,17 +239,16 @@ class EditDocumentModal extends Component {
     handleCancel = () => {
         this.setState({
             visible: false,
-            modalText: this.props.document.title
+            text: this.props.document.title
         });
     };
 
     onChange = e => {
-        // TODO: Tidier way to do this?
-        this.setState({modalText: this.state.modalText + e.nativeEvent.data})
+        this.setState({text: e.target.value})
     };
 
     render() {
-        const {visible, confirmLoading, modalText} = this.state;
+        const {visible, confirmLoading} = this.state;
 
         return (
             <div>
@@ -269,7 +272,7 @@ class EditDocumentModal extends Component {
                                 placeholder="Document Title"
                                 onChange={this.onChange}
                                 onPressEnter={this.handleOk}
-                                value={modalText}
+                                defaultValue={this.props.document.title}
                                 autoFocus
                             />
                         </Form.Item>
@@ -315,7 +318,7 @@ class DeleteDocumentModal extends Component {
             if (requestOk) {
                 message.success('Document Deleted')
             }
-
+            // TODO: Fix error that sometimes happens when deleting documents.
             this.setState({
                 confirmLoading: false,
                 visible: false
@@ -350,6 +353,7 @@ class DeleteDocumentModal extends Component {
                     okText="Yes"
                     okType="danger"
                     cancelText="No"
+                    destroyOnClose={true}
                 >
                     <Typography.Paragraph>
                         Are you sure you want to delete this document? This action cannot be undone.

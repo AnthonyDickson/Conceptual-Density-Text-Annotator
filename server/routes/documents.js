@@ -13,11 +13,12 @@ router.delete('/:documentId', controllers.delete_document_by_id);
 
 // Sections
 router.get('/:documentId/sections', controllers.get_document_sections);
+router.patch('/:documentId/sections', controllers.set_document_sections);
 router.get('/:documentId/sections/:sectionNumber', controllers.get_document_section);
 
 // Annotations
 router.get('/:documentId/annotations', controllers.get_document_annotations);
-router.post('/:documentId/annotations', controllers.set_document_annotations);
+router.patch('/:documentId/annotations', controllers.set_document_annotations);
 router.get('/:documentId/sections/:sectionNumber/annotations', controllers.get_document_annotations_by_section_number);
 
 module.exports = router;
