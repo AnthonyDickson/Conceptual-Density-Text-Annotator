@@ -397,7 +397,8 @@ class App extends Component {
         const state = {
             ...this.state,
             sections: sections,
-            annotations: annotations
+            annotations: annotations,
+            dirty: false
         };
 
         this.setState(state);
