@@ -197,10 +197,9 @@ class DocumentView extends Component {
                                             {item.title}
                                     </Typography.Title>
                                     <Annotation
-                                        text={item.text}
+                                        section={item}
                                         tag={tag}
                                         enabledTags={checkedList}
-                                        section_number={item.section_number}
                                         annotations={annotations[item.section_number]}
                                         updateAnnotations={updateAnnotations}
                                     />
@@ -267,7 +266,7 @@ class EditSectionDrawer extends Component {
     render() {
         return (
             <div>
-                <Button onClick={this.showDrawer} type="dashed">
+                <Button onClick={this.showDrawer}>
                     <Icon type="edit"/> Edit
                 </Button>
                 <Drawer

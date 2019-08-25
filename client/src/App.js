@@ -414,12 +414,12 @@ class App extends Component {
         }, {});
     };
 
-    updateAnnotations = (section_number, annotations) => {
+    updateAnnotations = (section, annotations) => {
         const state = {
             ...this.state,
             annotations: {
                 ...this.state.annotations,
-                [section_number]: annotations
+                [section.section_number]: annotations
             },
             dirty: true
         };

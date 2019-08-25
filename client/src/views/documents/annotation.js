@@ -20,10 +20,9 @@ export const TAG_COLOURS = {
 
 export class Annotation extends Component {
     static propTypes = {
+        section: PropTypes.object.isRequired,
         annotations: PropTypes.arrayOf(PropTypes.object).isRequired,
         updateAnnotations: PropTypes.func.isRequired,
-        section_number: PropTypes.number.isRequired,
-        text: PropTypes.string.isRequired,
         tag: PropTypes.string.isRequired,
         enabledTags: PropTypes.arrayOf(PropTypes.string).isRequired,
     };
@@ -33,12 +32,17 @@ export class Annotation extends Component {
     };
 
     handleChange = annotations => {
-        const {section_number, updateAnnotations} = this.props;
-        updateAnnotations(section_number, annotations);
+        const {section, updateAnnotations} = this.props;
+
+        const allAnnotations = annotations.concat(
+            this.props.annotations.filter(annotation => !this.props.enabledTags.includes(annotation.tag))
+        );
+
+        updateAnnotations(section, allAnnotations);
     };
 
     render() {
-        const {tag, text} = this.props;
+        const {tag, section} = this.props;
         const {enabledTags, annotations} = this.props;
         const filteredAnnotations = annotations.filter(annotation => enabledTags.includes(annotation.tag));
 
@@ -46,9 +50,9 @@ export class Annotation extends Component {
             <div>
                 <TokenAnnotator
                     style={{
-                        lineHeight: 2.5,
+                        lineHeight: 1.5,
                     }}
-                    tokens={text.split(' ')}
+                    tokens={section.text.split(' ')}
                     value={filteredAnnotations}
                     onChange={this.handleChange}
                     getSpan={span => ({
