@@ -39,7 +39,9 @@ class SideMenu extends Component {
                 breakpoint="lg"
                 collapsedWidth="0"
                 style={style}
-                onCollapse={(collapsed, type) => this.props.onCollapse(collapsed && type === "responsive")}
+                onCollapse={(collapsed, type) => {
+                    if (type === "responsive") this.props.onCollapse(collapsed);
+                }}
                 onBreakpoint={this.props.onCollapse}
             >
                 <div className="logo"/>
