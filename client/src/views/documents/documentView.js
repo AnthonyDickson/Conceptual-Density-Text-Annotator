@@ -50,6 +50,7 @@ class DocumentView extends Component {
         annotations: PropTypes.objectOf(PropTypes.array).isRequired,
         fetchSectionsAndAnnotations: PropTypes.func.isRequired,
         selectDocument: PropTypes.func.isRequired,
+        updateDocumentTitle: PropTypes.func.isRequired,
         addSection: PropTypes.func.isRequired,
         updateSection: PropTypes.func.isRequired,
         deleteSection: PropTypes.func.isRequired,
@@ -175,6 +176,23 @@ class DocumentView extends Component {
 
         selectDocument(match.params.documentId, fetchSectionsAndAnnotations);
     }
+
+    updateDocumentTitle = title => {
+        const {documents, currentDocument, updateDocumentTitle} = this.props;
+
+        const documentIndex = documents.findIndex(theDocument => theDocument.id === currentDocument);
+
+        if (documentIndex === -1) {
+            return;
+        }
+
+        const document = {
+            ...documents[documentIndex],
+            title: title
+        };
+
+        updateDocumentTitle(document);
+    };
 
     render() {
         const {currentDocument, documents, sections, loading} = this.props;

@@ -19,6 +19,7 @@ class App extends Component {
         documents: [],
         sections: [],
         annotations: {},
+        loadedDocuments: [],
         loadedSections: [],
         loadedAnnotations: {},
         currentDocument: -1,
@@ -66,7 +67,8 @@ class App extends Component {
         this.fetchFrom('/api/documents/', (res) => {
             const state = {
                 ...this.state,
-                documents: res.documents
+                documents: res.documents,
+                loadedDocuments: res.documents.map(document => ({...document}))
             };
 
             this.setState(state);
@@ -279,6 +281,25 @@ class App extends Component {
             });
     };
 
+    updateDocumentTitle = (document) => {
+        const state = {
+            ...this.state,
+            documents: this.state.documents.map(theDocument => {
+                if (theDocument.id === document.id) {
+                    return {
+                        ...theDocument,
+                        title: document.title
+                    };
+                } else {
+                    return theDocument;
+                }
+            }),
+            dirty: true
+        };
+
+        this.setState(state);
+    };
+
     updateDocument = (document, cb) => {
         const url = `/api/documents/${document.id}`;
 
@@ -342,40 +363,64 @@ class App extends Component {
     saveChanges = () => {
         const hideLoadingMessage = message.loading('Saving changes...', 0);
 
+        const document = this.state.documents.find(document => document.id === this.state.currentDocument);
         const sections = this.state.sections;
         const annotations = this.state.annotations;
 
-        let url = `/api/documents/${this.state.currentDocument}/sections`;
+        let url = `/api/documents/${document.id}`;
 
         fetch(url, {
-            method: 'PATCH',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({sections: sections})
+            body: JSON.stringify({document: document})
         })
             .then(res => {
                 if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
 
-                let url = `/api/documents/${this.state.currentDocument}/annotations`;
+                url = `/api/documents/${this.state.currentDocument}/sections`;
 
                 fetch(url, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({annotations: annotations})
+                    body: JSON.stringify({sections: sections})
                 })
                     .then(res => {
                         if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
 
-                        const state = {
-                            ...this.state,
-                            dirty: false
-                        };
+                        let url = `/api/documents/${this.state.currentDocument}/annotations`;
 
-                        this.setState(state);
-                        message.success('Changes Saved')
+                        fetch(url, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({annotations: annotations})
+                        })
+                            .then(res => {
+                                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                                const annotationsCopy = {...annotations};
+
+                                sections.forEach(section => {
+                                    const sectionNumber = section.section_number;
+                                    annotationsCopy[sectionNumber] = annotations[sectionNumber].map(annotation => ({...annotation}));
+                                });
+
+                                const state = {
+                                    ...this.state,
+                                    loadedDocuments: this.state.documents.map(document => ({...document})),
+                                    loadedSections: this.state.sections.map(section => ({...section})),
+                                    loadedAnnotations: annotationsCopy,
+                                    dirty: false
+                                };
+
+                                this.setState(state);
+                                message.success('Changes Saved')
+                            })
                     })
             })
             .catch(err => {
@@ -388,6 +433,7 @@ class App extends Component {
     };
 
     discardChanges = () => {
+        const documents = this.state.loadedDocuments.map(document => ({...document}));
         const sections = this.state.loadedSections.map(section => ({...section}));
         const annotations = {...this.state.loadedAnnotations};
 
@@ -397,6 +443,7 @@ class App extends Component {
 
         const state = {
             ...this.state,
+            documents: documents,
             sections: sections,
             annotations: annotations,
             dirty: false
@@ -438,6 +485,8 @@ class App extends Component {
     };
 
     render() {
+        // TODO: Fix layout not being responsive on load (you need to change orientation twice on mobile to trigger the
+        //  layout change).
         const layoutStyle = (this.state.sideMenuCollapsed) ? {marginLeft: 0} : {marginLeft: 200};
 
         return (
@@ -471,6 +520,7 @@ class App extends Component {
                                         copyDocument={this.copyDocument}
                                         deleteDocument={this.deleteDocument}
                                         updateDocument={this.updateDocument}
+                                        updateDocumentTitle={this.updateDocumentTitle}
                                         fetchSectionsAndAnnotations={this.fetchSectionsAndAnnotations}
                                         addSection={this.addSection}
                                         updateSection={this.updateSection}
