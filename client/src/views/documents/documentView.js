@@ -4,7 +4,23 @@ import {Prompt, withRouter} from "react-router-dom";
 
 import PropTypes from "prop-types";
 
-import {Affix, Button, Card, Col, Drawer, Form, Icon, Input, List, Modal, Radio, Row, Skeleton, Typography} from "antd";
+import {
+    Affix,
+    Button,
+    Card,
+    Col,
+    Collapse,
+    Drawer,
+    Form,
+    Icon,
+    Input,
+    List,
+    Modal,
+    Radio,
+    Row,
+    Skeleton,
+    Typography
+} from "antd";
 import NotFound from "../notFound";
 import {
     A_PRIORI_CONCEPT,
@@ -93,7 +109,7 @@ class DocumentView extends Component {
     annotationsForm = () => {
         const formLayout = {
             labelCol: {span: 4},
-            wrapperCol: {span: 14},
+            wrapperCol: {span: 20},
         };
 
         const annotationTypeRadioButtons = this.state.checkedList.map(option => {
@@ -108,23 +124,27 @@ class DocumentView extends Component {
             <Affix>
                 <Card>
                     <Form>
-                        <Form.Item label="Filter Tags" {...formLayout}>
-                            <Radio.Group
-                                onChange={this.handleCategoryChange}
-                                defaultValue={ALL}
-                                value={this.state.category}
-                            >
-                                {categoryRadioButtons}
-                            </Radio.Group>
-                        </Form.Item>
-                        <Form.Item label="Annotation Type" {...formLayout}>
-                            <Radio.Group
-                                onChange={this.handleTagChange}
-                                defaultValue={A_PRIORI_CONCEPT}
-                                value={this.state.tag}>
-                                {annotationTypeRadioButtons}
-                            </Radio.Group>
-                        </Form.Item>
+                        <Collapse accordion defaultActiveKey="1" bordered={false}>
+                            <Collapse.Panel header="Tagging" key="1" style={{borderBottom: 0}}>
+                                <Form.Item label="Filter Tags" {...formLayout}>
+                                    <Radio.Group
+                                        onChange={this.handleCategoryChange}
+                                        defaultValue={ALL}
+                                        value={this.state.category}
+                                    >
+                                        {categoryRadioButtons}
+                                    </Radio.Group>
+                                </Form.Item>
+                                <Form.Item label="Annotation Type" {...formLayout}>
+                                    <Radio.Group
+                                        onChange={this.handleTagChange}
+                                        defaultValue={A_PRIORI_CONCEPT}
+                                        value={this.state.tag}>
+                                        {annotationTypeRadioButtons}
+                                    </Radio.Group>
+                                </Form.Item>
+                            </Collapse.Panel>
+                        </Collapse>
                         {this.props.dirty ?
                             <Form.Item>
                                 <Row>

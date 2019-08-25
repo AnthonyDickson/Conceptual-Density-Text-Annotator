@@ -14,6 +14,7 @@ import './index.css';
 class Documents extends Component {
     static propTypes = {
         loading: PropTypes.bool.isRequired,
+        sideMenuCollapsed: PropTypes.bool.isRequired,
         documents: PropTypes.arrayOf(PropTypes.object).isRequired,
         sections: PropTypes.arrayOf(PropTypes.object).isRequired,
         annotations: PropTypes.objectOf(PropTypes.array).isRequired,
@@ -75,7 +76,7 @@ class Documents extends Component {
         return (
             <div>
                 <div>
-                    <Button onClick={fetchDocuments} disabled={loading} style={{margin: '5px 0'}}>
+                    <Button onClick={fetchDocuments} disabled={loading} style={{margin: '5px 0', marginRight: 5}}>
                         <Icon type="sync"/> Refresh
                     </Button>
                     <CreateDocumentModal createDocument={this.props.createDocument} loading={this.props.loading}/>
@@ -94,11 +95,19 @@ class Documents extends Component {
                             <List.Item actions={[
                                 <Spin spinning={item.isCopying === true}>
                                     <Button onClick={() => this.props.copyDocument(item)}>
-                                        <Icon type="copy"/> Copy
+                                        <Icon type="copy"/> {this.props.sideMenuCollapsed ? '' : ' Copy'}
                                     </Button>
                                 </Spin>,
-                                <EditDocumentModal document={item} updateDocument={this.props.updateDocument}/>,
-                                <DeleteDocumentModal document={item} deleteDocument={this.props.deleteDocument}/>
+                                <EditDocumentModal
+                                    document={item}
+                                    updateDocument={this.props.updateDocument}
+                                    sideMenuCollapsed={this.props.sideMenuCollapsed}
+                                />,
+                                <DeleteDocumentModal
+                                    document={item}
+                                    deleteDocument={this.props.deleteDocument}
+                                    sideMenuCollapsed={this.props.sideMenuCollapsed}
+                                />
                             ]}>
                                 <List.Item.Meta
                                     title={
@@ -176,7 +185,7 @@ class CreateDocumentModal extends Component {
 
         return (
             <span>
-                <Button onClick={this.showModal} disabled={loading} type="dashed" style={{margin: '5px'}}>
+                <Button onClick={this.showModal} disabled={loading} type="dashed" style={{margin: '5px 0'}}>
                     <Icon type="plus"/> Create Document
                 </Button>
                 <Modal
@@ -207,6 +216,7 @@ class EditDocumentModal extends Component {
     static propTypes = {
         document: PropTypes.object.isRequired,
         updateDocument: PropTypes.func.isRequired,
+        sideMenuCollapsed: PropTypes.bool.isRequired,
     };
 
     state = {
@@ -260,7 +270,7 @@ class EditDocumentModal extends Component {
                     onClick={() => this.showModal()}
                     type="default"
                 >
-                    <Icon type="edit"/> Edit Title
+                    <Icon type="edit"/> {this.props.sideMenuCollapsed ? '' : 'Edit Title'}
                 </Button>
                 <Modal
                     title={<span><Icon type="edit"/> Editing Document Title</span>}
@@ -291,6 +301,7 @@ class DeleteDocumentModal extends Component {
     static propTypes = {
         document: PropTypes.object.isRequired,
         deleteDocument: PropTypes.func.isRequired,
+        sideMenuCollapsed: PropTypes.bool.isRequired,
     };
 
     state = {
@@ -345,7 +356,7 @@ class DeleteDocumentModal extends Component {
                     onClick={() => this.showModal()}
                     type="danger"
                 >
-                    <Icon type="delete"/> Delete
+                    <Icon type="delete"/> {this.props.sideMenuCollapsed ? '' : 'Delete'}
                 </Button>
                 <Modal
                     title={<span><Icon type="delete"/> Delete Document</span>}

@@ -12,10 +12,9 @@ import {TAG_COLOURS} from "./views/documents/annotation";
 
 import './App.css';
 
-const {Sider, Header, Content} = Layout;
+const {Header, Content} = Layout;
 
 class App extends Component {
-
     state = {
         documents: [],
         sections: [],
@@ -24,8 +23,10 @@ class App extends Component {
         loadedAnnotations: {},
         currentDocument: -1,
         loading: false,
-        dirty: false
+        dirty: false,
+        sideMenuCollapsed: false,
     };
+
     numRequests = 0;
 
     componentDidMount() {
@@ -427,22 +428,23 @@ class App extends Component {
         this.setState(state);
     };
 
+    onCollapse = collapsed => {
+        const state = {
+            ...this.state,
+            sideMenuCollapsed: collapsed
+        };
+
+        this.setState(state);
+    };
+
     render() {
+        const layoutStyle = (this.state.sideMenuCollapsed) ? {marginLeft: 0} : {marginLeft: 200};
+
         return (
             <Layout>
-                <Sider
-                    style={{
-                        overflow: 'auto',
-                        height: '100vh',
-                        position: 'fixed',
-                        left: 0,
-                    }}
-                >
-                    <div className="logo"/>
-                    <SideMenu/>
-                </Sider>
+                <SideMenu sideMenuCollapsed={this.state.sideMenuCollapsed} onCollapse={this.onCollapse}/>
 
-                <Layout style={{marginLeft: 200}}>
+                <Layout style={layoutStyle}>
                     <Header style={{background: '#fff', padding: '24px 16px', minHeight: 120}}>
                         <Typography>
                             <Typography.Title>COSC480 Document Annotator</Typography.Title>
@@ -462,6 +464,7 @@ class App extends Component {
                                         currentDocument={this.state.currentDocument}
                                         loading={this.state.loading}
                                         dirty={this.state.dirty}
+                                        sideMenuCollapsed={this.state.sideMenuCollapsed}
                                         selectDocument={this.selectDocument}
                                         fetchDocuments={this.fetchDocuments}
                                         createDocument={this.createDocument}
@@ -484,8 +487,7 @@ class App extends Component {
                     {/*<Layout.Footer style={{textAlign: 'center'}}>Ant Design ©2018 Created by Ant UED</Layout.Footer>*/}
                 </Layout>
             </Layout>
-        )
-            ;
+        );
     }
 }
 
