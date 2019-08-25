@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Aug 25, 2019 at 04:25 AM
+-- Generation Time: Aug 25, 2019 at 04:49 AM
 -- Server version: 8.0.13-4
 -- PHP Version: 7.2.19-0ubuntu0.18.04.2
 
@@ -73,6 +73,7 @@ CREATE TABLE `section` (
 -- Indexes for table `annotation`
 --
 ALTER TABLE `annotation`
+  ADD PRIMARY KEY (`document_id`,`section_number`,`start`,`end`,`tag`),
   ADD KEY `document_id_idx` (`document_id`) USING BTREE,
   ADD KEY `section_number_idx` (`section_number`) USING BTREE;
 
@@ -86,6 +87,7 @@ ALTER TABLE `document`
 -- Indexes for table `section`
 --
 ALTER TABLE `section`
+  ADD PRIMARY KEY (`document_id`,`section_number`),
   ADD KEY `document_id` (`document_id`),
   ADD KEY `section_number` (`section_number`);
 
