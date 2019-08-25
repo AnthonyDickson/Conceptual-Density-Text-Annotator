@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Link, Route, Switch, withRouter} from "react-router-dom";
+import {Link, Route, Switch} from "react-router-dom";
 
 import PropTypes from "prop-types";
 import TimeAgo from "react-timeago";
@@ -17,7 +17,9 @@ class Documents extends Component {
         documents: PropTypes.arrayOf(PropTypes.object).isRequired,
         sections: PropTypes.arrayOf(PropTypes.object).isRequired,
         annotations: PropTypes.objectOf(PropTypes.array).isRequired,
+        currentDocument: PropTypes.number.isRequired,
         fetchDocuments: PropTypes.func.isRequired,
+        selectDocument: PropTypes.func.isRequired,
         createDocument: PropTypes.func.isRequired,
         copyDocument: PropTypes.func.isRequired,
         deleteDocument: PropTypes.func.isRequired,
@@ -28,29 +30,30 @@ class Documents extends Component {
         deleteSection: PropTypes.func.isRequired,
         updateAnnotations: PropTypes.func.isRequired,
         saveChanges: PropTypes.func.isRequired,
+        discardChanges: PropTypes.func.isRequired,
         dirty: PropTypes.bool.isRequired,
     };
 
-    getDocumentView = withRouter(({match}) => {
-        const documentId = parseInt(match.params.documentId);
-
+    getDocumentView = () => {
         return (
             <DocumentView
                 loading={this.props.loading}
                 dirty={this.props.dirty}
-                documentId={documentId}
+                currentDocument={this.props.currentDocument}
                 documents={this.props.documents}
                 sections={this.props.sections}
                 annotations={this.props.annotations}
                 fetchSectionsAndAnnotations={this.props.fetchSectionsAndAnnotations}
+                selectDocument={this.props.selectDocument}
                 addSection={this.props.addSection}
                 updateSection={this.props.updateSection}
                 deleteSection={this.props.deleteSection}
                 updateAnnotations={this.props.updateAnnotations}
                 saveChanges={this.props.saveChanges}
+                discardChanges={this.props.discardChanges}
             />
         )
-    });
+    };
 
     render() {
         return (
@@ -65,7 +68,6 @@ class Documents extends Component {
     DocumentsList = () => {
         const {documents, loading, fetchDocuments} = this.props;
 
-        // TODO: Fix time display
         const dateConversion = (timeStamp) => {
             return new Date(timeStamp)
         };
@@ -91,7 +93,7 @@ class Documents extends Component {
                         renderItem={item => (
                             <List.Item actions={[
                                 <Spin spinning={item.isCopying === true}>
-                                    <Button onClick={() => this.props.copyDocument(item.id)}>
+                                    <Button onClick={() => this.props.copyDocument(item)}>
                                         <Icon type="copy"/> Copy
                                     </Button>
                                 </Spin>,
@@ -127,7 +129,7 @@ class CreateDocumentModal extends Component {
     };
 
     state = {
-        modalText: '',
+        title: '',
         visible: false,
         confirmLoading: false,
     };
@@ -143,7 +145,7 @@ class CreateDocumentModal extends Component {
             confirmLoading: true,
         });
 
-        const document = {title: this.state.modalText};
+        const document = {title: this.state.title};
 
         this.props.createDocument(document, (requestOk) => {
             if (requestOk) {
@@ -160,13 +162,12 @@ class CreateDocumentModal extends Component {
     handleCancel = () => {
         this.setState({
             visible: false,
-            modalText: ''
+            title: ''
         });
     };
 
     onChange = e => {
-        // TODO: Tidier way to do this?
-        this.setState({modalText: this.state.modalText + e.nativeEvent.data})
+        this.setState({title: e.target.value})
     };
 
     render() {
@@ -191,7 +192,7 @@ class CreateDocumentModal extends Component {
                                 placeholder="Document Title"
                                 onChange={this.onChange}
                                 onPressEnter={this.handleOk}
-                                value={modalText}
+                                defaultValue={modalText}
                                 autoFocus
                             />
                         </Form.Item>
@@ -316,7 +317,7 @@ class DeleteDocumentModal extends Component {
             confirmLoading: true,
         });
 
-        this.props.deleteDocument(this.props.document.id, (requestOk) => {
+        this.props.deleteDocument(this.props.document, (requestOk) => {
             if (requestOk) {
                 message.success('Document Deleted')
             }

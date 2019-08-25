@@ -1,4 +1,6 @@
 import React, {Component} from "react";
+import {withRouter} from "react-router-dom";
+
 
 import PropTypes from "prop-types";
 
@@ -23,20 +25,22 @@ const REFERENCES = 'REFERENCES';
 const RELATIONS = 'RELATIONS';
 const CATEGORIES = [ALL, CONCEPTS, REFERENCES, RELATIONS];
 
-// Confirm navigation when there are unsaved changes.
+// TODO: Confirm navigation when there are unsaved changes.
 class DocumentView extends Component {
     static propTypes = {
         loading: PropTypes.bool.isRequired,
-        documentId: PropTypes.number.isRequired,
+        currentDocument: PropTypes.number.isRequired,
         documents: PropTypes.arrayOf(PropTypes.object).isRequired,
         sections: PropTypes.arrayOf(PropTypes.object).isRequired,
         annotations: PropTypes.objectOf(PropTypes.array).isRequired,
         fetchSectionsAndAnnotations: PropTypes.func.isRequired,
+        selectDocument: PropTypes.func.isRequired,
         addSection: PropTypes.func.isRequired,
         updateSection: PropTypes.func.isRequired,
         deleteSection: PropTypes.func.isRequired,
         updateAnnotations: PropTypes.func.isRequired,
         saveChanges: PropTypes.func.isRequired,
+        discardChanges: PropTypes.func.isRequired,
         dirty: PropTypes.bool.isRequired,
     };
 
@@ -87,7 +91,7 @@ class DocumentView extends Component {
         this.setState(nextState)
     };
 
-    annotationsForm = documentId => {
+    annotationsForm = () => {
         const formLayout = {
             labelCol: {span: 4},
             wrapperCol: {span: 14},
@@ -127,12 +131,12 @@ class DocumentView extends Component {
                                 <Row>
                                     <Col offset={4}>
                                         <Button
-                                            onClick={() => this.props.saveChanges(documentId)}
+                                            onClick={this.props.saveChanges}
                                             type="primary"
                                             style={{marginRight: 10}}>
                                             Save Changes
                                         </Button>
-                                        <Button onClick={() => this.loadData()}>Discard Changes</Button>
+                                        <Button onClick={this.props.discardChanges}>Discard Changes</Button>
                                     </Col>
                                 </Row>
                             </Form.Item>
@@ -144,19 +148,15 @@ class DocumentView extends Component {
     };
 
     componentDidMount() {
-        this.loadData();
-    }
+        const {selectDocument, match, fetchSectionsAndAnnotations} = this.props;
 
-    loadData() {
-        const {fetchSectionsAndAnnotations, documentId} = this.props;
-
-        fetchSectionsAndAnnotations(documentId);
+        selectDocument(match.params.documentId, fetchSectionsAndAnnotations);
     }
 
     render() {
-        const {documentId, documents, sections, loading} = this.props;
+        const {currentDocument, documents, sections, loading} = this.props;
 
-        const documentIndex = documents.findIndex(theDocument => theDocument.id === documentId);
+        const documentIndex = documents.findIndex(theDocument => theDocument.id === currentDocument);
         const documentExists = documentIndex !== -1;
 
         if (loading) {
@@ -173,7 +173,7 @@ class DocumentView extends Component {
 
             return (
                 <div>
-                    {this.annotationsForm(documentId)}
+                    {this.annotationsForm(currentDocument)}
 
                     <List
                         bordered
@@ -197,8 +197,8 @@ class DocumentView extends Component {
                                         text={item.text}
                                         tag={tag}
                                         enabledTags={checkedList}
-                                        sectionId={item.id}
-                                        annotations={annotations[item.id]}
+                                        section_number={item.section_number}
+                                        annotations={annotations[item.section_number]}
                                         updateAnnotations={updateAnnotations}
                                     />
                                 </Typography>
@@ -326,7 +326,7 @@ class DeleteSectionModal extends Component {
     };
 
     handleOk = () => {
-        this.props.deleteSection(this.props.section.id);
+        this.props.deleteSection(this.props.section);
 
         this.setState({visible: false})
     };
@@ -343,7 +343,7 @@ class DeleteSectionModal extends Component {
         return (
             <div>
                 <Button
-                    key={`section-list-delete-${this.props.section.id}`}
+                    key={`section-list-delete-${this.props.section.section_number}`}
                     onClick={() => this.showModal()}
                     type="danger"
                 >
@@ -368,4 +368,4 @@ class DeleteSectionModal extends Component {
     }
 }
 
-export default DocumentView;
+export default withRouter(DocumentView);

@@ -1,8 +1,20 @@
 const connection = require('../connection').pool;
 
+const serverError = (req, res, err) => {
+    console.error('Server encountered an error:');
+    console.error(`${req.method} request to ${req.url}`);
+    console.error(err);
+
+    res.status(500);
+    res.send({message: err.message});
+};
+
 exports.get_documents = (req, res) => {
     connection.query('SELECT id, title, date_created, date_edited FROM document', (err, rows) => {
-        if (err) throw err;
+        if (err) {
+            serverError(req, res, err);
+            return;
+        }
 
         res.send({documents: rows});
     })
@@ -14,7 +26,10 @@ exports.post_document = (req, res) => {
     connection.query(
         `INSERT INTO document (title) VALUES ('${document.title}')`,
         (err, insertResult) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             if (insertResult.affectedRows === 0) {
                 res.status(500);
@@ -25,7 +40,10 @@ exports.post_document = (req, res) => {
                      FROM document 
                      WHERE id = ${insertResult.insertId}`,
                     (err, selectResult) => {
-                        if (err) throw err;
+                        if (err) {
+                            serverError(req, res, err);
+                            return;
+                        }
 
                         console.log(selectResult);
                         console.log({message: 'ok', document: selectResult[0]});
@@ -48,17 +66,23 @@ exports.copy_document_by_id = (req, res) => {
                 FROM document AS old_document
                 WHERE old_document.id = ${documentId}`,
         (err, result) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             const insertedDocumentId = result.insertId;
 
             connection.query(
-                `INSERT INTO document_section (document_id, section_number, title, text)  
+                `INSERT INTO section (document_id, section_number, title, text)  
                 SELECT ${insertedDocumentId}, section_number, title, text
-                FROM document_section AS old_document_section
-                WHERE old_document_section.document_id = ${documentId}`,
+                FROM section AS old_section
+                WHERE old_section.document_id = ${documentId}`,
                 (err, result) => {
-                    if (err) throw err;
+                    if (err) {
+                        serverError(req, res, err);
+                        return;
+                    }
 
                     if (result.affectedRows >= 0) {
                         connection.query(
@@ -66,7 +90,10 @@ exports.copy_document_by_id = (req, res) => {
                             FROM document 
                             WHERE id = ${insertedDocumentId}`,
                             (err, rows) => {
-                                if (err) throw err;
+                                if (err) {
+                                    serverError(req, res, err);
+                                    return;
+                                }
 
                                 res.send({document: rows[0]})
                             }
@@ -84,7 +111,10 @@ exports.get_document_by_id = (req, res) => {
     connection.query(
         `SELECT id, title, date_created, date_edited FROM document WHERE id = ${req.params.documentId}`,
         (err, rows) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             res.send({document: rows[0]});
         }
@@ -97,7 +127,10 @@ exports.put_document_by_id = (req, res) => {
     connection.query(
         `UPDATE document SET title = '${document.title}', date_edited = NOW() WHERE id = ${req.params.documentId}`,
         (err, result) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             if (result.affectedRows === 0) {
                 res.status(500);
@@ -115,7 +148,10 @@ exports.delete_document_by_id = (req, res) => {
         // language=MySQL
         `DELETE FROM document WHERE id = ${req.params.documentId}`,
         (err) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             res.status(200);
             res.send({message: 'ok'});
@@ -125,11 +161,14 @@ exports.delete_document_by_id = (req, res) => {
 
 exports.get_document_sections = (req, res) => {
     connection.query(
-        `SELECT id, document_id, section_number, title, text
-        FROM document_section 
+        `SELECT document_id, section_number, title, text
+        FROM section 
         WHERE document_id = ${req.params.documentId}`,
         (err, rows) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             res.send({sections: rows});
         }
@@ -143,21 +182,27 @@ exports.set_document_sections = (req, res) => {
     const values = [];
 
     values.push(...sections.map((section, index) => {
-        return [section.id, documentId, index + 1, section.title, section.text];
+        return [documentId, index + 1, section.title, section.text];
     }));
 
     connection.query(
-        `DELETE FROM document_section WHERE document_id = ${documentId}`, (err) => {
-            if (err) throw err;
+        `DELETE FROM section WHERE document_id = ${documentId}`, (err) => {
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             if (values.length === 0) {
                 updateDocumentTimeStamp(documentId, res);
             } else {
                 connection.query(
-                    'INSERT INTO document_section (id, document_id, section_number, title, text) VALUES ?',
+                    'INSERT INTO section (document_id, section_number, title, text) VALUES ?',
                     [values],
                     (err) => {
-                        if (err) throw err;
+                        if (err) {
+                            serverError(req, res, err);
+                            return;
+                        }
 
                         updateDocumentTimeStamp(documentId, res);
                     }
@@ -168,14 +213,17 @@ exports.set_document_sections = (req, res) => {
 
 exports.get_document_section = (req, res) => {
     connection.query(
-        `SELECT id, document_id, section_number, title, text
-        FROM document_section 
+        `SELECT document_id, section_number, title, text
+        FROM section 
         WHERE 
             document_id = ${req.params.documentId} 
                 AND
             section_number = ${req.params.sectionNumber}`,
         (err, rows) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             res.send({section: rows[0]});
         }
@@ -185,11 +233,14 @@ exports.get_document_section = (req, res) => {
 
 exports.get_document_annotations = (req, res) => {
     connection.query(
-        `SELECT id, document_id, section_id, start, end, tag
-        FROM section_annotation 
+        `SELECT document_id, section_number, start, end, tag
+        FROM annotation 
         WHERE document_id = ${req.params.documentId}`,
         (err, rows) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             res.send({annotations: rows});
         }
@@ -200,7 +251,10 @@ function updateDocumentTimeStamp(documentId, res) {
     connection.query(
         `UPDATE document SET date_edited = NOW() WHERE id = ${documentId}`,
         (err) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             res.status(200);
             res.send();
@@ -223,17 +277,23 @@ exports.set_document_annotations = (req, res) => {
     }
 
     connection.query(
-        `DELETE FROM section_annotation WHERE document_id = ${documentId}`, (err) => {
-            if (err) throw err;
+        `DELETE FROM annotation WHERE document_id = ${documentId}`, (err) => {
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             if (values.length === 0) {
                 updateDocumentTimeStamp(documentId, res);
             } else {
                 connection.query(
-                    'INSERT INTO section_annotation (document_id, section_id, start, end, tag) VALUES ?',
+                    'INSERT INTO annotation (document_id, section_number, start, end, tag) VALUES ?',
                     [values],
                     (err) => {
-                        if (err) throw err;
+                        if (err) {
+                            serverError(req, res, err);
+                            return;
+                        }
 
                         updateDocumentTimeStamp(documentId, res);
                     }
@@ -245,22 +305,19 @@ exports.set_document_annotations = (req, res) => {
 exports.get_document_annotations_by_section_number = (req, res) => {
     connection.query(
         `
-        SELECT id, document_id, section_id, start, end, tag 
-        FROM section_annotation 
+        SELECT document_id, section_number, start, end, tag 
+        FROM annotation 
         WHERE 
             document_id = ${req.params.documentId} 
                 AND 
-            section_id = ( 
-                SELECT document_section.id 
-                FROM document_section 
-                WHERE 
-                    document_section.document_id = ${req.params.documentId} 
-                        AND 
-                    document_section.section_number = ${req.params.sectionNumber} 
+            section_number = ${req.params.sectionNumber} 
             )
         `,
         (err, rows) => {
-            if (err) throw err;
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
 
             res.send({annotations: rows});
         }

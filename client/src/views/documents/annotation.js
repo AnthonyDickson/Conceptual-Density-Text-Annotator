@@ -22,7 +22,7 @@ export class Annotation extends Component {
     static propTypes = {
         annotations: PropTypes.arrayOf(PropTypes.object).isRequired,
         updateAnnotations: PropTypes.func.isRequired,
-        sectionId: PropTypes.number.isRequired,
+        section_number: PropTypes.number.isRequired,
         text: PropTypes.string.isRequired,
         tag: PropTypes.string.isRequired,
         enabledTags: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -33,8 +33,8 @@ export class Annotation extends Component {
     };
 
     handleChange = annotations => {
-        const {sectionId, updateAnnotations} = this.props;
-        updateAnnotations(sectionId, annotations);
+        const {section_number, updateAnnotations} = this.props;
+        updateAnnotations(section_number, annotations);
     };
 
     render() {

@@ -20,6 +20,9 @@ class App extends Component {
         documents: [],
         sections: [],
         annotations: {},
+        loadedSections: [],
+        loadedAnnotations: {},
+        currentDocument: -1,
         loading: false,
         dirty: false
     };
@@ -60,83 +63,137 @@ class App extends Component {
 
     fetchDocuments = () => {
         this.fetchFrom('/api/documents/', (res) => {
-            this.setState({documents: res.documents});
+            const state = {
+                ...this.state,
+                documents: res.documents
+            };
+
+            this.setState(state);
         });
     };
 
-    fetchSectionsAndAnnotations = (documentId) => {
+    selectDocument = (documentId, cb) => {
+        this.setState({
+            ...this.state,
+            currentDocument: parseInt(documentId)
+        }, cb);
+    };
+
+    fetchSectionsAndAnnotations = () => {
+        const documentId = this.state.currentDocument;
+
         this.fetchFrom(`/api/documents/${documentId}/sections`, (res) => {
             const sections = res.sections;
 
             this.fetchFrom(`/api/documents/${documentId}/annotations`, (res) => {
-                const annotations = this.groupBy(res.annotations, 'section_id');
+                const annotations = this.groupBy(res.annotations, 'section_number');
 
                 // Make sure each section has an entry in the annotations dictionary.
                 sections.forEach(section => {
-                    annotations[section.id] = annotations[section.id] || [];
+                    annotations[section.section_number] = annotations[section.section_number] || [];
 
                     // Restore the annotation colour.
-                    annotations[section.id].forEach(annotation => {
+                    annotations[section.section_number].forEach(annotation => {
                         annotation.color = TAG_COLOURS[annotation.tag];
                     });
                 });
 
-                this.setState({sections: sections, annotations: annotations, dirty: false});
+                const annotationsCopy = {...annotations};
+
+                sections.forEach(section => {
+                    const sectionNumber = section.section_number;
+                    annotationsCopy[sectionNumber] = annotations[sectionNumber].map(annotation => ({...annotation}));
+                });
+
+                const state = {
+                    ...this.state,
+                    sections: sections,
+                    annotations: annotations,
+                    loadedSections: sections.map(section => ({...section})),
+                    loadedAnnotations: annotationsCopy,
+                    dirty: false
+                };
+
+                this.setState(state);
             });
         });
     };
 
     addSection = () => {
-        const sections = [...this.state.sections];
-        const url = '/api/sections/nextId';
-        const hideLoadingMessage = message.loading('Fetching new section ID...', 0);
+        const nextId = this.state.sections.length + 1;
 
-        fetch(url)
-            .then(res => {
-                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+        const section = {
+            document_id: this.state.currentDocument,
+            section_number: nextId,
+            title: 'title',
+            text: 'text'
+        };
 
-                return res.json();
-            })
-            .then(res => {
-                const nextId = parseInt(res.nextId) + this.state.sections.length;
+        const state = {
+            ...this.state,
+            sections: [
+                ...this.state.sections,
+                section
+            ],
+            annotations: {
+                ...this.state.annotations,
+                [nextId]: []
+            },
+            dirty: true
+        };
 
-                sections.push({id: nextId, title: 'title', text: 'text'});
-
-                const annotations = Object.assign({}, this.state.annotations);
-                annotations[nextId] = [];
-
-                this.setState({sections: sections, annotations: annotations, dirty: true});
-            })
-            .catch(err => {
-                console.log(err);
-                Modal.error({
-                    title: 'Error: Could not add section!',
-                    content: `Request to '${url}' failed. Reason: '${err.message}'.`,
-                })
-            })
-            .finally(() => hideLoadingMessage());
+        this.setState(state);
     };
 
+    // TODO: Remove invalid annotations (ones that reference tokens that are no longer in the section.
     updateSection = section => {
-        const sections = [...this.state.sections];
-        const sectionIndex = sections.findIndex(theSection => theSection.id === section.id);
+        const tokens = section.text.split(' ');
 
-        if (sectionIndex >= 0) {
-            sections[sectionIndex] = section;
+        const state = {
+            ...this.state,
+            sections: this.state.sections.map(theSection => {
+                return theSection.section_number === section.section_number ? section : theSection;
+            }),
+            annotations: {
+                ...this.state.annotations,
+                [section.section_number]: this.state.annotations[section.section_number].filter(annotation => {
+                    return annotation.end < tokens.length;
+                })
+            },
+            dirty: true
+        };
+
+        this.setState(state);
+    };
+
+    deleteSection = section => {
+        const sections = this.state.sections.filter(theSection => theSection.section_number !== section.section_number);
+        // Discard annotations for the given section.
+        const {[section.section_number]: _, ...annotationsWithoutSection} = this.state.annotations;
+
+        // 'Re-index' section numbers. For example, a document with sections [1, 2, 3] should reduce to [1, 2] after the
+        // original section 2 was deleted, and the annotations from section 3 should have their section numbers
+        // reassigned to 2.
+        for (let sectionNumber = section.section_number; sectionNumber <= sections.length; sectionNumber++) {
+            annotationsWithoutSection[sectionNumber] = annotationsWithoutSection[sectionNumber + 1];
+            annotationsWithoutSection[sectionNumber].forEach(annotation => {
+                annotation.section_number = sectionNumber;
+            });
+
+            sections[sectionNumber - 1].section_number = sectionNumber;
         }
 
-        this.setState({sections: sections, dirty: true});
-    };
+        // Need to get rid of 'dangling' annotation key.
+        delete annotationsWithoutSection[this.state.sections.length];
 
-    deleteSection = sectionId => {
-        let sections = [...this.state.sections];
+        const state = {
+            ...this.state,
+            sections: sections,
+            annotations: annotationsWithoutSection,
+            dirty: true
+        };
 
-        let annotations = Object.assign({}, this.state.annotations);
-        annotations[sectionId] = [];
-
-        sections = sections.filter(theSection => theSection.id !== sectionId);
-
-        this.setState({sections: sections, annotations: annotations, dirty: true});
+        this.setState(state);
     };
 
     createDocument = (document, cb) => {
@@ -155,12 +212,15 @@ class App extends Component {
                 return res.json();
             })
             .then(res => {
-                console.log(res);
-                const documents = [...this.state.documents];
+                const state = {
+                    ...this.state,
+                    documents: [
+                        ...this.state.documents,
+                        res.document
+                    ]
+                };
 
-                documents.push(res.document);
-
-                this.setState({documents: documents});
+                this.setState(state);
 
                 if (cb !== undefined) cb(true);
             })
@@ -174,14 +234,18 @@ class App extends Component {
             });
     };
 
-    copyDocument = (documentId) => {
-        const url = `/api/documents/${documentId}/copy`;
-        const documents = [...this.state.documents];
+    copyDocument = document => {
+        console.log(document);
+        const url = `/api/documents/${document.id}/copy`;
 
-        const document = documents.find(document => document.id === parseInt(documentId));
-        document.isCopying = true;
+        const state = {
+            ...this.state,
+            documents: this.state.documents.map(theDocument => {
+                return (theDocument.id === document.id) ? {...theDocument, isCopying: true} : theDocument;
+            })
+        };
 
-        this.setState({documents: documents});
+        this.setState(state);
 
         fetch(url, {method: 'POST'})
             .then(res => {
@@ -190,14 +254,18 @@ class App extends Component {
                 return res.json();
             })
             .then(res => {
-                const documents = [...this.state.documents];
-
-                const document = documents.find(document => document.id === parseInt(documentId));
-                document.isCopying = false;
+                const documents = this.state.documents.map(theDocument => {
+                    return (theDocument.id === document.id) ? {...theDocument, isCopying: false} : theDocument;
+                });
 
                 documents.push(res.document);
 
-                this.setState({documents: documents});
+                const state = {
+                    ...this.state,
+                    documents: documents
+                };
+
+                this.setState(state);
 
                 message.success('Document Copied')
             })
@@ -223,15 +291,15 @@ class App extends Component {
             .then(res => {
                 if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
 
-                const documents = [...this.state.documents];
+                const state = {
+                    ...this.state,
+                    documents: this.state.documents.map(theDocument => {
+                        return (theDocument.id === document.id) ? document : theDocument;
+                    })
+                };
 
-                const documentIndex = documents.findIndex(theDocument => theDocument.id === document.id);
+                this.setState(state);
 
-                if (documentIndex >= 0) {
-                    documents[documentIndex] = document;
-                }
-
-                this.setState({documents: documents});
                 if (cb !== undefined) cb(true);
             })
             .catch(err => {
@@ -244,16 +312,19 @@ class App extends Component {
             });
     };
 
-    deleteDocument = (documentId, cb) => {
-        const url = `/api/documents/${documentId}`;
+    deleteDocument = (document, cb) => {
+        const url = `/api/documents/${document.id}`;
 
         fetch(url, {method: 'DELETE'})
             .then(res => {
                 if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
 
-                const documentIdInt = parseInt(documentId);
+                const state = {
+                    ...this.state,
+                    documents: this.state.documents.filter(theDocument => theDocument.id !== document.id)
+                };
 
-                this.setState({documents: this.state.documents.filter(document => document.id !== documentIdInt)});
+                this.setState(state);
 
                 if (cb !== undefined) cb(true);
             })
@@ -267,13 +338,13 @@ class App extends Component {
             });
     };
 
-    saveChanges = documentId => {
+    saveChanges = () => {
         const hideLoadingMessage = message.loading('Saving changes...', 0);
 
         const sections = this.state.sections;
         const annotations = this.state.annotations;
 
-        let url = `/api/documents/${documentId}/sections`;
+        let url = `/api/documents/${this.state.currentDocument}/sections`;
 
         fetch(url, {
             method: 'PATCH',
@@ -285,7 +356,7 @@ class App extends Component {
             .then(res => {
                 if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
 
-                let url = `/api/documents/${documentId}/annotations`;
+                let url = `/api/documents/${this.state.currentDocument}/annotations`;
 
                 fetch(url, {
                     method: 'PATCH',
@@ -297,7 +368,12 @@ class App extends Component {
                     .then(res => {
                         if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
 
-                        this.setState({dirty: false});
+                        const state = {
+                            ...this.state,
+                            dirty: false
+                        };
+
+                        this.setState(state);
                         message.success('Changes Saved')
                     })
             })
@@ -310,6 +386,23 @@ class App extends Component {
             }).finally(() => hideLoadingMessage());
     };
 
+    discardChanges = () => {
+        const sections = this.state.loadedSections.map(section => ({...section}));
+        const annotations = {...this.state.loadedAnnotations};
+
+        for (const sectionNumber in annotations) {
+            annotations[sectionNumber] = annotations[sectionNumber].map(annotations => ({...annotations}))
+        }
+
+        const state = {
+            ...this.state,
+            sections: sections,
+            annotations: annotations
+        };
+
+        this.setState(state);
+    };
+
 
     // Create a dictionary by grouping elements in an array by a giving property.
     groupBy = (array, property) => {
@@ -320,12 +413,17 @@ class App extends Component {
         }, {});
     };
 
-    updateAnnotations = (sectionId, annotations) => {
-        let newAnnotations = Object.assign({}, this.state.annotations);
+    updateAnnotations = (section_number, annotations) => {
+        const state = {
+            ...this.state,
+            annotations: {
+                ...this.state.annotations,
+                [section_number]: annotations
+            },
+            dirty: true
+        };
 
-        newAnnotations[sectionId] = annotations;
-
-        this.setState({annotations: newAnnotations, dirty: true});
+        this.setState(state);
     };
 
     render() {
@@ -360,8 +458,10 @@ class App extends Component {
                                         documents={this.state.documents}
                                         sections={this.state.sections}
                                         annotations={this.state.annotations}
+                                        currentDocument={this.state.currentDocument}
                                         loading={this.state.loading}
                                         dirty={this.state.dirty}
+                                        selectDocument={this.selectDocument}
                                         fetchDocuments={this.fetchDocuments}
                                         createDocument={this.createDocument}
                                         copyDocument={this.copyDocument}
@@ -373,6 +473,7 @@ class App extends Component {
                                         deleteSection={this.deleteSection}
                                         updateAnnotations={this.updateAnnotations}
                                         saveChanges={this.saveChanges}
+                                        discardChanges={this.discardChanges}
                                     />}
                                 />
                                 <Route component={NotFound}/>
