@@ -188,7 +188,8 @@ class DocumentView extends Component {
 
         const document = {
             ...documents[documentIndex],
-            title: title
+            title: title,
+            date_edited: new Date().toISOString()
         };
 
         updateDocumentTitle(document);

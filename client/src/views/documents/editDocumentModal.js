@@ -26,7 +26,12 @@ export class EditDocumentModal extends Component {
             confirmLoading: true,
         });
 
-        const document = Object.assign({}, this.props.document, {title: this.state.text});
+        const document = {
+            ...this.props.document,
+            title: this.state.text,
+            date_edited: new Date().toISOString()
+        };
+
         this.props.updateDocument(document, (requestOk) => {
             if (requestOk) {
                 message.success('Document Title Updated')
