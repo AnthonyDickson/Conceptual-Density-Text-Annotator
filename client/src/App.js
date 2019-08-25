@@ -361,12 +361,12 @@ class App extends Component {
     };
 
     saveChanges = () => {
-        const hideLoadingMessage = message.loading('Saving changes...', 0);
+        const hideSavingMessage = message.loading('Saving changes...', 0);
 
         const document = this.state.documents.find(document => document.id === this.state.currentDocument);
         const sections = this.state.sections;
         const annotations = this.state.annotations;
-
+        // TODO: Add API endpoint to handle update of an entire document (document title, sections and annotations)).
         let url = `/api/documents/${document.id}`;
 
         fetch(url, {
@@ -419,17 +419,36 @@ class App extends Component {
                                 };
 
                                 this.setState(state);
+                                hideSavingMessage();
                                 message.success('Changes Saved')
-                            })
-                    })
+                            }).catch(err => {
+                            console.log(err);
+                            hideSavingMessage();
+
+                            Modal.error({
+                                title: 'Error: Could not process request!',
+                                content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                            });
+                        });
+                    }).catch(err => {
+                    console.log(err);
+                    hideSavingMessage();
+
+                    Modal.error({
+                        title: 'Error: Could not process request!',
+                        content: `Request to '${url}' failed. Reason: '${err.message}'.`,
+                    });
+                });
             })
             .catch(err => {
                 console.log(err);
+                hideSavingMessage();
+
                 Modal.error({
                     title: 'Error: Could not process request!',
                     content: `Request to '${url}' failed. Reason: '${err.message}'.`,
                 });
-            }).finally(() => hideLoadingMessage());
+            });
     };
 
     discardChanges = () => {
