@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {withRouter} from "react-router-dom";
+import {Prompt, withRouter} from "react-router-dom";
 
 
 import PropTypes from "prop-types";
@@ -25,7 +25,6 @@ const REFERENCES = 'REFERENCES';
 const RELATIONS = 'RELATIONS';
 const CATEGORIES = [ALL, CONCEPTS, REFERENCES, RELATIONS];
 
-// TODO: Confirm navigation when there are unsaved changes.
 class DocumentView extends Component {
     static propTypes = {
         loading: PropTypes.bool.isRequired,
@@ -130,6 +129,10 @@ class DocumentView extends Component {
                             <Form.Item>
                                 <Row>
                                     <Col offset={4}>
+                                        <Prompt
+                                            message="You have unsaved changes which will be lost if you leave this page.
+                                            Press 'Ok' if you are okay with this."
+                                        />
                                         <Button
                                             onClick={this.props.saveChanges}
                                             type="primary"
