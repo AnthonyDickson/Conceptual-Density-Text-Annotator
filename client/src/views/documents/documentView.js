@@ -211,6 +211,7 @@ class DocumentView extends Component {
         } else if (documentExists) {
             const {tag, checkedList} = this.state;
             const {annotations, updateAnnotations, updateSection, deleteSection} = this.props;
+            const document = documents[documentIndex];
 
             return (
                 <div>
@@ -219,21 +220,29 @@ class DocumentView extends Component {
                     <List
                         bordered
                         dataSource={sections}
+                        header={
+                            <Typography>
+                                <Typography.Title editable={{onChange: this.updateDocumentTitle}}>
+                                    {document.title}
+                                </Typography.Title>
+                            </Typography>
+                        }
                         renderItem={item => (
                             <List.Item>
-                                <Typography>
-                                            <span style={{
-                                                margin: '5px',
-                                                position: "absolute",
-                                                right: 5,
-                                                display: "inline"
-                                            }}>
-                                                <EditSectionDrawer section={item} updateSection={updateSection}/>
-                                                <DeleteSectionModal section={item} deleteSection={deleteSection}/>
-                                            </span>
-                                    <Typography.Title>
-                                            {item.title}
-                                    </Typography.Title>
+                                <Typography style={{width: '100%'}}>
+                                    <Row>
+                                        <Col sm={{span: 24}} lg={{span: 16}}>
+                                            <Typography.Title level={2}>
+                                                {item.title}
+                                            </Typography.Title>
+                                        </Col>
+                                        <Col sm={{span: 24}} lg={{offset: 4, span: 2}}>
+                                            <EditSectionDrawer section={item} updateSection={updateSection}/>
+                                        </Col>
+                                        <Col sm={{span: 24}} lg={{span: 2}}>
+                                            <DeleteSectionModal section={item} deleteSection={deleteSection}/>
+                                        </Col>
+                                    </Row>
                                     <Annotation
                                         section={item}
                                         tag={tag}
