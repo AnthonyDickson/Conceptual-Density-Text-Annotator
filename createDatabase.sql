@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Aug 22, 2019 at 10:44 AM
+-- Generation Time: Aug 25, 2019 at 04:25 AM
 -- Server version: 8.0.13-4
 -- PHP Version: 7.2.19-0ubuntu0.18.04.2
 
@@ -19,8 +19,23 @@ SET time_zone = "+12:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `EKez9vJIaL`
+-- Database: `9x2jASit7J`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annotation`
+--
+
+DROP TABLE IF EXISTS `annotation`;
+CREATE TABLE `annotation` (
+  `document_id` int(11) UNSIGNED NOT NULL,
+  `section_number` int(11) UNSIGNED NOT NULL,
+  `start` int(11) UNSIGNED NOT NULL,
+  `end` int(11) UNSIGNED NOT NULL,
+  `tag` enum('A PRIORI','EMERGING','FORWARD','BACKWARD','ENTITY','RELATION') CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ROW_FORMAT=COMPACT;
 
 -- --------------------------------------------------------
 
@@ -28,9 +43,10 @@ SET time_zone = "+12:00";
 -- Table structure for table `document`
 --
 
+DROP TABLE IF EXISTS `document`;
 CREATE TABLE `document` (
   `id` int(10) UNSIGNED NOT NULL,
-  `title` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
+  `title` varchar(45) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `date_edited` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `date_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -38,35 +54,27 @@ CREATE TABLE `document` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `document_section`
+-- Table structure for table `section`
 --
 
-CREATE TABLE `document_section` (
-  `id` int(10) UNSIGNED NOT NULL,
+DROP TABLE IF EXISTS `section`;
+CREATE TABLE `section` (
   `document_id` int(10) UNSIGNED NOT NULL,
-  `section_number` int(11) NOT NULL DEFAULT '1',
-  `title` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
-  `text` text COLLATE utf8_unicode_ci NOT NULL
+  `section_number` int(11) UNSIGNED NOT NULL,
+  `title` varchar(45) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `text` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ROW_FORMAT=COMPACT;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `section_annotation`
---
-
-CREATE TABLE `section_annotation` (
-  `id` int(11) NOT NULL,
-  `document_id` int(11) UNSIGNED NOT NULL,
-  `section_id` int(11) UNSIGNED NOT NULL,
-  `start` int(11) UNSIGNED NOT NULL,
-  `end` int(11) UNSIGNED NOT NULL,
-  `tag` enum('A PRIORI','EMERGING','FORWARD','BACKWARD','ENTITY','RELATION') CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `annotation`
+--
+ALTER TABLE `annotation`
+  ADD KEY `document_id_idx` (`document_id`) USING BTREE,
+  ADD KEY `section_number_idx` (`section_number`) USING BTREE;
 
 --
 -- Indexes for table `document`
@@ -75,19 +83,11 @@ ALTER TABLE `document`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `document_section`
+-- Indexes for table `section`
 --
-ALTER TABLE `document_section`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `document_id` (`document_id`);
-
---
--- Indexes for table `section_annotation`
---
-ALTER TABLE `section_annotation`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `section_id` (`section_id`),
-  ADD KEY `document_id` (`document_id`);
+ALTER TABLE `section`
+  ADD KEY `document_id` (`document_id`),
+  ADD KEY `section_number` (`section_number`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -100,33 +100,21 @@ ALTER TABLE `document`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `document_section`
---
-ALTER TABLE `document_section`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `section_annotation`
---
-ALTER TABLE `section_annotation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- Constraints for dumped tables
 --
 
 --
--- Constraints for table `document_section`
+-- Constraints for table `annotation`
 --
-ALTER TABLE `document_section`
-  ADD CONSTRAINT `document_section_ibfk_1` FOREIGN KEY (`document_id`) REFERENCES `document` (`id`);
+ALTER TABLE `annotation`
+  ADD CONSTRAINT `annotation_document_id_fk` FOREIGN KEY (`document_id`) REFERENCES `document` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `annotation_section_number_fk` FOREIGN KEY (`section_number`) REFERENCES `section` (`section_number`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `section_annotation`
+-- Constraints for table `section`
 --
-ALTER TABLE `section_annotation`
-  ADD CONSTRAINT `section_annotation_ibfk_1` FOREIGN KEY (`section_id`) REFERENCES `document_section` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `section_annotation_ibfk_2` FOREIGN KEY (`document_id`) REFERENCES `document` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `section`
+  ADD CONSTRAINT `section_document_id_fk` FOREIGN KEY (`document_id`) REFERENCES `document` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
