@@ -1,4 +1,4 @@
-import {ADD_DOCUMENT, REMOVE_DOCUMENT} from "../actionTypes";
+import {CREATE_DOCUMENT, DELETE_DOCUMENT, UPDATE_DOCUMENT} from "../actionTypes";
 
 const initialState = {
     documents: [],
@@ -16,12 +16,19 @@ const initialState = {
 
 function rootReducer(state = initialState, action) {
     switch (action.type) {
-        case ADD_DOCUMENT:
+        case CREATE_DOCUMENT:
             return {
                 ...state,
                 documents: state.documents.concat(action.payload)
             };
-        case REMOVE_DOCUMENT:
+        case UPDATE_DOCUMENT:
+            return {
+                ...state,
+                documents: state.documents.map(document => {
+                    return (document.id === action.payload.id) ? {...action.payload} : document;
+                })
+            };
+        case DELETE_DOCUMENT:
             return {
                 ...state,
                 documents: state.documents.filter(document => document.id !== action.payload.id)

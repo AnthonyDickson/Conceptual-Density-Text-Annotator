@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import {Route, Switch} from 'react-router-dom';
 import {connect} from "react-redux";
 
-import {addDocument, removeDocument} from "./redux/actions";
+import {createDocument, deleteDocument, updateDocument} from "./redux/actions";
 
 import Breadcrumbs from "./views/breadcrumbs";
 import Documents from "./views/documents";
@@ -77,7 +77,7 @@ class App extends Component {
                 loadedDocuments: res.documents.map(document => ({...document}))
             };
 
-            res.documents.forEach(document => this.props.addDocument(document));
+            res.documents.forEach(document => this.props.createDocument(document));
 
             this.setState(state);
         });
@@ -231,7 +231,7 @@ class App extends Component {
                     ]
                 };
 
-                this.props.addDocument(res.document);
+                this.props.createDocument(res.document);
 
                 this.setState(state);
 
@@ -307,6 +307,7 @@ class App extends Component {
             dirty: true
         };
 
+        this.props.updateDocument(document);
         this.setState(state);
     };
 
@@ -331,6 +332,7 @@ class App extends Component {
                 };
 
                 this.setState(state);
+                this.props.updateDocument(document);
 
                 if (cb !== undefined) cb(true);
             })
@@ -356,7 +358,7 @@ class App extends Component {
                     documents: this.state.documents.filter(theDocument => theDocument.id !== document.id)
                 };
 
-                this.props.removeDocument(document);
+                this.props.deleteDocument(document);
 
                 this.setState(state);
 
@@ -576,7 +578,7 @@ class App extends Component {
     }
 }
 
-const mapDispatchToProps = {addDocument, removeDocument};
+const mapDispatchToProps = {createDocument, updateDocument, deleteDocument};
 
 export default connect(
     null,
