@@ -16,7 +16,8 @@
     "react-scripts": "3.1.1",
     "react-text-annotate": "github:eight0153/react-text-annotate",
     "react-timeago": "^4.4.0",
-    "redux": "^4.0.4"
+    "redux": "^4.0.4",
+    "redux-thunk": "^2.3.0"
   },
   "devDependencies": {
     "nodemon": "^1.19.1",

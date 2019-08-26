@@ -45,6 +45,7 @@ export class Annotation extends Component {
         const {tag, section} = this.props;
         const {enabledTags, annotations} = this.props;
         const filteredAnnotations = annotations.filter(annotation => enabledTags.includes(annotation.tag));
+        const splitText = section.text.split(/[\s\n\t]|([()"'?!;:,.])/).filter(str => str !== undefined && str.length > 0);
 
         return (
             <div>
@@ -52,7 +53,7 @@ export class Annotation extends Component {
                     style={{
                         lineHeight: 1.5,
                     }}
-                    tokens={section.text.split(/[\s\n\t]/)}
+                    tokens={splitText}
                     value={filteredAnnotations}
                     onChange={this.handleChange}
                     getSpan={span => ({
