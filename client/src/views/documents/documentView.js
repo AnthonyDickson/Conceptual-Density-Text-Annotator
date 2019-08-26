@@ -19,6 +19,7 @@ import {
     Radio,
     Row,
     Skeleton,
+    Tooltip,
     Typography
 } from "antd";
 import NotFound from "../notFound";
@@ -232,15 +233,16 @@ class DocumentView extends Component {
                             <List.Item>
                                 <Typography style={{width: '100%'}}>
                                     <Row>
-                                        <Col sm={{span: 24}} md={{span: 16}} lg={{span: 16}}>
+                                        <Col xs={{span: 24}} sm={{span: 16}} md={{span: 16}} lg={{span: 16}}>
                                             <Typography.Title level={2}>
                                                 {item.title}
                                             </Typography.Title>
                                         </Col>
-                                        <Col sm={{span: 24}} md={{offset: 2, span: 3}} lg={{offset: 4, span: 2}}>
+                                        <Col xs={{span: 24}} sm={{offset: 4, span: 2}} md={{offset: 4, span: 2}}
+                                             lg={{offset: 6, span: 1}}>
                                             <EditSectionDrawer section={item} updateSection={updateSection}/>
                                         </Col>
-                                        <Col sm={{span: 24}} md={{span: 3}} lg={{span: 2}}>
+                                        <Col xs={{span: 24}} sm={{span: 2}} md={{span: 2}} lg={{span: 1}}>
                                             <DeleteSectionModal section={item} deleteSection={deleteSection}/>
                                         </Col>
                                     </Row>
@@ -314,9 +316,11 @@ class EditSectionDrawer extends Component {
     render() {
         return (
             <div>
-                <Button onClick={this.showDrawer}>
-                    <Icon type="edit"/> Edit
-                </Button>
+                <Tooltip title="Edit">
+                    <Button onClick={this.showDrawer}>
+                        <Icon type="edit"/>
+                    </Button>
+                </Tooltip>
                 <Drawer
                     title={<span><Icon type="edit"/> Edit Section</span>}
                     width={720}
@@ -392,21 +396,23 @@ class DeleteSectionModal extends Component {
 
         return (
             <div>
-                <Button
-                    key={`section-list-delete-${this.props.section.section_number}`}
-                    onClick={() => this.showModal()}
-                    type="danger"
-                >
-                    <Icon type="delete"/> Delete
-                </Button>
+                <Tooltip title="Delete">
+                    <Button
+                        key={`section-list-delete-${this.props.section.section_number}`}
+                        onClick={() => this.showModal()}
+                        type="danger"
+                    >
+                        <Icon type="delete"/>
+                    </Button>
+                </Tooltip>
                 <Modal
                     title={<span><Icon type="delete"/> Delete Section</span>}
                     visible={visible}
                     onOk={this.handleOk}
                     onCancel={this.handleCancel}
-                    okText="Yes"
+                    okText="Delete"
                     okType="danger"
-                    cancelText="No"
+                    cancelText="Cancel"
                     destroyOnClose={true}
                 >
                     <Typography.Paragraph>

@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import TimeAgo from "react-timeago";
 
 
-import {Button, Form, Icon, Input, List, message, Modal, Skeleton, Spin, Typography} from "antd";
+import {Button, Form, Icon, Input, List, message, Modal, Skeleton, Spin, Tooltip, Typography} from "antd";
 import NotFound from "../notFound";
 import DocumentView from "./documentView";
 
@@ -96,9 +96,11 @@ class Documents extends Component {
                         renderItem={item => (
                             <List.Item actions={[
                                 <Spin spinning={item.isCopying === true}>
-                                    <Button onClick={() => this.props.copyDocument(item)}>
-                                        <Icon type="copy"/> {this.props.sideMenuCollapsed ? '' : ' Copy'}
-                                    </Button>
+                                    <Tooltip title="Copy">
+                                        <Button onClick={() => this.props.copyDocument(item)}>
+                                            <Icon type="copy"/>
+                                        </Button>
+                                    </Tooltip>
                                 </Spin>,
                                 <EditDocumentModal
                                     document={item}
@@ -268,30 +270,32 @@ class DeleteDocumentModal extends Component {
         const {visible, confirmLoading} = this.state;
 
         return (
-            <div>
-                <Button
-                    key={`document-list-delete-${this.props.document.id}`}
-                    onClick={() => this.showModal()}
-                    type="danger"
-                >
-                    <Icon type="delete"/> {this.props.sideMenuCollapsed ? '' : 'Delete'}
-                </Button>
+            <>
+                <Tooltip title="Delete">
+                    <Button
+                        key={`document-list-delete-${this.props.document.id}`}
+                        onClick={() => this.showModal()}
+                        type="danger"
+                    >
+                        <Icon type="delete"/>
+                    </Button>
+                </Tooltip>
                 <Modal
                     title={<span><Icon type="delete"/> Delete Document</span>}
                     visible={visible}
                     onOk={this.handleOk}
                     confirmLoading={confirmLoading}
                     onCancel={this.handleCancel}
-                    okText="Yes"
+                    okText="Delete"
                     okType="danger"
-                    cancelText="No"
+                    cancelText="Cancel"
                     destroyOnClose={true}
                 >
                     <Typography.Paragraph>
                         Are you sure you want to delete this document? This action cannot be undone.
                     </Typography.Paragraph>
                 </Modal>
-            </div>
+            </>
         );
     }
 }

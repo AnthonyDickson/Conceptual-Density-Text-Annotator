@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import PropTypes from "prop-types";
-import {Button, Form, Icon, Input, message, Modal} from "antd";
+import {Button, Form, Icon, Input, message, Modal, Tooltip} from "antd";
 
 export class EditDocumentModal extends Component {
     static propTypes = {
@@ -60,13 +60,15 @@ export class EditDocumentModal extends Component {
 
         return (
             <div>
-                <Button
-                    key="document-list-edit"
-                    onClick={() => this.showModal()}
-                    type="default"
-                >
-                    <Icon type="edit"/> {this.props.sideMenuCollapsed ? '' : 'Edit Title'}
-                </Button>
+                <Tooltip title="Edit Title">
+                    <Button
+                        key="document-list-edit"
+                        onClick={() => this.showModal()}
+                        type="default"
+                    >
+                        <Icon type="edit"/>
+                    </Button>
+                </Tooltip>
                 <Modal
                     title={<span><Icon type="edit"/> Editing Document Title</span>}
                     visible={visible}
@@ -75,7 +77,7 @@ export class EditDocumentModal extends Component {
                     onCancel={this.handleCancel}
                 >
                     <Form>
-                        <Form.Item>
+                        <Form.Item label="Document Title">
                             <Input
                                 placeholder="Document Title"
                                 onChange={this.onChange}
