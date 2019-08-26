@@ -5,10 +5,10 @@ import {Link, withRouter} from 'react-router-dom';
 import PropTypes from "prop-types";
 
 const defaultStyle = {
-    overflow: 'auto',
     height: '100vh',
     position: 'fixed',
     left: 0,
+    zIndex: 999
 };
 
 class SideMenu extends Component {
@@ -36,13 +36,11 @@ class SideMenu extends Component {
 
         return (
             <Layout.Sider
-                breakpoint="lg"
                 collapsedWidth="0"
+                collapsible={true}
+                defaultCollapsed={true}
                 style={style}
-                onCollapse={(collapsed, type) => {
-                    if (type === "responsive") this.props.onCollapse(collapsed);
-                }}
-                onBreakpoint={this.props.onCollapse}
+                onCollapse={(collapsed) => this.props.onCollapse(collapsed)}
             >
                 <div className="logo"/>
                 <Menu

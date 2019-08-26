@@ -25,7 +25,7 @@ class App extends Component {
         currentDocument: -1,
         loading: false,
         dirty: false,
-        sideMenuCollapsed: false,
+        sideMenuCollapsed: true,
     };
 
     numRequests = 0;
@@ -34,6 +34,7 @@ class App extends Component {
         this.fetchDocuments()
     }
 
+    // TODO: Move global state stuff to Redux store.
     fetchFrom = (url, cb) => {
         this.setState({loading: true});
         this.numRequests++;
@@ -504,22 +505,33 @@ class App extends Component {
     };
 
     render() {
-        // TODO: Fix layout not being responsive on load (you need to change orientation twice on mobile to trigger the
-        //  layout change).
-        const layoutStyle = (this.state.sideMenuCollapsed) ? {marginLeft: 0} : {marginLeft: 200};
+        const defaultStyle = {margin: '24px 16px 0'};
+        let layoutStyle;
+
+        if (this.state.sideMenuCollapsed) {
+            layoutStyle = {
+                ...defaultStyle,
+                width: 'auto'
+            };
+        } else {
+            layoutStyle = {
+                ...defaultStyle,
+                width: '100vw'
+            };
+        }
 
         return (
             <Layout>
                 <SideMenu sideMenuCollapsed={this.state.sideMenuCollapsed} onCollapse={this.onCollapse}/>
 
-                <Layout style={layoutStyle}>
+                <Layout>
                     <Header style={{background: '#fff', padding: '24px 16px', minHeight: 120}}>
                         <Typography>
                             <Typography.Title>COSC480 Document Annotator</Typography.Title>
                             <Breadcrumbs/>
                         </Typography>
                     </Header>
-                    <Content style={{margin: '24px 16px 0'}}>
+                    <Content style={layoutStyle}>
                         <div style={{padding: 24, background: '#fff', minHeight: 360}}>
                             <Switch>
                                 <Route exact path="/" component={Index}/>
