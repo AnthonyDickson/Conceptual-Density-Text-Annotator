@@ -1,4 +1,4 @@
-import {CREATE_DOCUMENT, DELETE_DOCUMENT, UPDATE_DOCUMENT} from "../actionTypes";
+import {CREATE_DOCUMENT, DELETE_DOCUMENT, SET_DIRTY, UPDATE_DOCUMENT} from "../actionTypes";
 
 const initialState = {
     documents: [],
@@ -32,6 +32,11 @@ function rootReducer(state = initialState, action) {
             return {
                 ...state,
                 documents: state.documents.filter(document => document.id !== action.payload.id)
+            };
+        case SET_DIRTY:
+            return {
+                ...state,
+                dirty: action.payload
             };
         default:
             return state;

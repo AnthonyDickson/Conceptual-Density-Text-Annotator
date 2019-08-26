@@ -1,3 +1,4 @@
 export const CREATE_DOCUMENT = "CREATE_DOCUMENT";
 export const DELETE_DOCUMENT = "DELETE_DOCUMENT";
 export const UPDATE_DOCUMENT = "UPDATE_DOCUMENT";
+export const SET_DIRTY = "SET_DIRTY";

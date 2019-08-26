@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import {Route, Switch} from 'react-router-dom';
 import {connect} from "react-redux";
 
-import {createDocument, deleteDocument, updateDocument} from "./redux/actions";
+import {createDocument, deleteDocument, setDirty, updateDocument} from "./redux/actions";
 
 import Breadcrumbs from "./views/breadcrumbs";
 import Documents from "./views/documents";
@@ -125,6 +125,7 @@ class App extends Component {
                     dirty: false
                 };
 
+                this.props.setDirty(false);
                 this.setState(state);
             });
         });
@@ -153,6 +154,7 @@ class App extends Component {
             dirty: true
         };
 
+        this.props.setDirty(true);
         this.setState(state);
     };
 
@@ -174,6 +176,7 @@ class App extends Component {
             dirty: true
         };
 
+        this.props.setDirty(true);
         this.setState(state);
     };
 
@@ -204,6 +207,7 @@ class App extends Component {
             dirty: true
         };
 
+        this.props.setDirty(true);
         this.setState(state);
     };
 
@@ -308,6 +312,7 @@ class App extends Component {
         };
 
         this.props.updateDocument(document);
+        this.props.setDirty(true);
         this.setState(state);
     };
 
@@ -438,6 +443,7 @@ class App extends Component {
                     saving: false
                 };
 
+                this.props.setDirty(false);
                 this.setState(state);
                 message.success('Changes Saved')
             })
@@ -473,6 +479,7 @@ class App extends Component {
             dirty: false
         };
 
+        this.props.setDirty(false);
         this.setState(state);
     };
 
@@ -496,6 +503,7 @@ class App extends Component {
             dirty: true
         };
 
+        this.props.setDirty(true);
         this.setState(state);
     };
 
@@ -578,7 +586,7 @@ class App extends Component {
     }
 }
 
-const mapDispatchToProps = {createDocument, updateDocument, deleteDocument};
+const mapDispatchToProps = {createDocument, updateDocument, deleteDocument, setDirty};
 
 export default connect(
     null,
