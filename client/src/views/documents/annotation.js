@@ -52,7 +52,7 @@ export class Annotation extends Component {
                     style={{
                         lineHeight: 1.5,
                     }}
-                    tokens={section.text.split(' ')}
+                    tokens={section.text.split(/[\s\n\t]/)}
                     value={filteredAnnotations}
                     onChange={this.handleChange}
                     getSpan={span => ({
