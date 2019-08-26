@@ -1,6 +1,9 @@
+import {Layout, message, Modal, Typography} from 'antd';
 import React, {Component} from 'react';
 import {Route, Switch} from 'react-router-dom';
-import {Layout, message, Modal, Typography} from 'antd';
+import {connect} from "react-redux";
+
+import {addDocument} from "./redux/actions";
 
 import Breadcrumbs from "./views/breadcrumbs";
 import Documents from "./views/documents";
@@ -11,6 +14,7 @@ import {TAG_COLOURS} from "./views/documents/documentView/annotation";
 
 
 import './App.css';
+import List from "./views/list";
 
 const {Header, Content} = Layout;
 
@@ -56,7 +60,7 @@ class App extends Component {
                     content: `Request to '${url}' failed. Reason: '${err.message}'.`,
                 });
             }).finally(() => {
-            this.numRequests--;
+                this.numRequests--;
 
                 if (this.numRequests === 0) {
                     this.setState({loading: false});
@@ -72,6 +76,8 @@ class App extends Component {
                 documents: res.documents,
                 loadedDocuments: res.documents.map(document => ({...document}))
             };
+
+            res.documents.forEach(document => this.props.addDocument(document));
 
             this.setState(state);
         });
@@ -224,6 +230,8 @@ class App extends Component {
                         res.document
                     ]
                 };
+
+                this.props.addDocument(res.document);
 
                 this.setState(state);
 
@@ -527,6 +535,7 @@ class App extends Component {
                         <div style={{padding: 24, background: '#fff', minHeight: 360}}>
                             <Switch>
                                 <Route exact path="/" component={Index}/>
+                                <Route path="/test" component={List}/>
                                 <Route path="/documents" render={props =>
                                     <Documents
                                         {...props}
@@ -565,4 +574,9 @@ class App extends Component {
     }
 }
 
-export default App;
+const mapDispatchToProps = {addDocument};
+
+export default connect(
+    null,
+    mapDispatchToProps
+)(App);
