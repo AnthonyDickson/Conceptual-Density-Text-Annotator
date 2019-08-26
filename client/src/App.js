@@ -25,6 +25,7 @@ class App extends Component {
         currentDocument: -1,
         loading: false,
         dirty: false,
+        saving: false,
         sideMenuCollapsed: true,
     };
 
@@ -362,7 +363,10 @@ class App extends Component {
     };
 
     saveChanges = () => {
-        const hideSavingMessage = message.loading('Saving changes...', 0);
+        this.setState({
+            ...this.state,
+            saving: true
+        });
 
         const document = this.state.documents.find(document => document.id === this.state.currentDocument);
         const sections = this.state.sections;
@@ -382,68 +386,56 @@ class App extends Component {
 
                 url = `/api/documents/${this.state.currentDocument}/sections`;
 
-                fetch(url, {
+                return fetch(url, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({sections: sections})
-                })
-                    .then(res => {
-                        if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
-
-                        let url = `/api/documents/${this.state.currentDocument}/annotations`;
-
-                        fetch(url, {
-                            method: 'PATCH',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({annotations: annotations})
-                        })
-                            .then(res => {
-                                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
-
-                                const annotationsCopy = {...annotations};
-
-                                sections.forEach(section => {
-                                    const sectionNumber = section.section_number;
-                                    annotationsCopy[sectionNumber] = annotations[sectionNumber].map(annotation => ({...annotation}));
-                                });
-
-                                const state = {
-                                    ...this.state,
-                                    loadedDocuments: this.state.documents.map(document => ({...document})),
-                                    loadedSections: this.state.sections.map(section => ({...section})),
-                                    loadedAnnotations: annotationsCopy,
-                                    dirty: false
-                                };
-
-                                this.setState(state);
-                                hideSavingMessage();
-                                message.success('Changes Saved')
-                            }).catch(err => {
-                            console.log(err);
-                            hideSavingMessage();
-
-                            Modal.error({
-                                title: 'Error: Could not process request!',
-                                content: `Request to '${url}' failed. Reason: '${err.message}'.`,
-                            });
-                        });
-                    }).catch(err => {
-                    console.log(err);
-                    hideSavingMessage();
-
-                    Modal.error({
-                        title: 'Error: Could not process request!',
-                        content: `Request to '${url}' failed. Reason: '${err.message}'.`,
-                    });
                 });
+            })
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                let url = `/api/documents/${this.state.currentDocument}/annotations`;
+
+                return fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({annotations: annotations})
+                });
+            })
+            .then(res => {
+                if (res.status !== 200) throw Error(`${res.status}: ${res.statusText}`);
+
+                const annotationsCopy = {...annotations};
+
+                sections.forEach(section => {
+                    const sectionNumber = section.section_number;
+                    annotationsCopy[sectionNumber] = annotations[sectionNumber].map(annotation => ({...annotation}));
+                });
+
+                const state = {
+                    ...this.state,
+                    loadedDocuments: this.state.documents.map(document => ({...document})),
+                    loadedSections: this.state.sections.map(section => ({...section})),
+                    loadedAnnotations: annotationsCopy,
+                    dirty: false,
+                    saving: false
+                };
+
+                this.setState(state);
+                message.success('Changes Saved')
             })
             .catch(err => {
                 console.log(err);
-                hideSavingMessage();
+
+                this.setState({
+                    ...this.state,
+                    saving: false
+                });
 
                 Modal.error({
                     title: 'Error: Could not process request!',
@@ -544,6 +536,7 @@ class App extends Component {
                                         currentDocument={this.state.currentDocument}
                                         loading={this.state.loading}
                                         dirty={this.state.dirty}
+                                        saving={this.state.saving}
                                         sideMenuCollapsed={this.state.sideMenuCollapsed}
                                         selectDocument={this.selectDocument}
                                         fetchDocuments={this.fetchDocuments}

@@ -14,7 +14,6 @@ import {EditDocumentModal} from "./editDocumentModal";
 
 class Documents extends Component {
     static propTypes = {
-        loading: PropTypes.bool.isRequired,
         sideMenuCollapsed: PropTypes.bool.isRequired,
         documents: PropTypes.arrayOf(PropTypes.object).isRequired,
         sections: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -33,7 +32,9 @@ class Documents extends Component {
         updateAnnotations: PropTypes.func.isRequired,
         saveChanges: PropTypes.func.isRequired,
         discardChanges: PropTypes.func.isRequired,
+        loading: PropTypes.bool.isRequired,
         dirty: PropTypes.bool.isRequired,
+        saving: PropTypes.bool.isRequired,
     };
 
     getDocumentView = () => {
@@ -41,6 +42,7 @@ class Documents extends Component {
             <DocumentView
                 loading={this.props.loading}
                 dirty={this.props.dirty}
+                saving={this.props.saving}
                 currentDocument={this.props.currentDocument}
                 documents={this.props.documents}
                 sections={this.props.sections}

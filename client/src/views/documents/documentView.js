@@ -44,7 +44,6 @@ const CATEGORIES = [ALL, CONCEPTS, REFERENCES, RELATIONS];
 
 class DocumentView extends Component {
     static propTypes = {
-        loading: PropTypes.bool.isRequired,
         currentDocument: PropTypes.number.isRequired,
         documents: PropTypes.arrayOf(PropTypes.object).isRequired,
         sections: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -59,6 +58,8 @@ class DocumentView extends Component {
         saveChanges: PropTypes.func.isRequired,
         discardChanges: PropTypes.func.isRequired,
         dirty: PropTypes.bool.isRequired,
+        loading: PropTypes.bool.isRequired,
+        saving: PropTypes.bool.isRequired,
     };
 
     state = {
@@ -157,11 +158,16 @@ class DocumentView extends Component {
                                         />
                                         <Button
                                             onClick={this.props.saveChanges}
+                                            loading={this.props.saving}
                                             type="primary"
                                             style={{marginRight: 10}}>
                                             Save Changes
                                         </Button>
-                                        <Button onClick={this.props.discardChanges}>Discard Changes</Button>
+                                        <Button
+                                            onClick={this.props.discardChanges}
+                                            disabled={this.props.saving}>
+                                            Discard Changes
+                                        </Button>
                                     </Col>
                                 </Row>
                             </Form.Item>
