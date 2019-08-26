@@ -4,25 +4,8 @@ import {Prompt, withRouter} from "react-router-dom";
 
 import PropTypes from "prop-types";
 
-import {
-    Affix,
-    Button,
-    Card,
-    Col,
-    Collapse,
-    Drawer,
-    Form,
-    Icon,
-    Input,
-    List,
-    Modal,
-    Radio,
-    Row,
-    Skeleton,
-    Tooltip,
-    Typography
-} from "antd";
-import NotFound from "../notFound";
+import {Affix, Button, Card, Col, Collapse, Form, Icon, List, Radio, Row, Skeleton, Typography} from "antd";
+import NotFound from "../../notFound";
 import {
     A_PRIORI_CONCEPT,
     Annotation,
@@ -32,6 +15,8 @@ import {
     FORWARD_REFERENCE,
     RELATION
 } from "./annotation";
+import {EditSectionDrawer} from "./editSectionDrawer";
+import {DeleteSectionModal} from "./deleteSectionModal";
 
 
 const ANNOTATION_TYPES = [A_PRIORI_CONCEPT, EMERGING_CONCEPT, FORWARD_REFERENCE, BACKWARD_REFERENCE, ENTITY, RELATION];
@@ -273,160 +258,6 @@ class DocumentView extends Component {
         } else {
             return NotFound();
         }
-    }
-}
-
-class EditSectionDrawer extends Component {
-    static propTypes = {
-        section: PropTypes.object.isRequired,
-        updateSection: PropTypes.func.isRequired,
-    };
-
-    state = {
-        title: this.props.section.title,
-        text: this.props.section.text,
-        visible: false,
-        confirmLoading: false,
-    };
-
-    showDrawer = () => {
-        this.setState({
-            visible: true,
-        });
-    };
-
-    handleOk = () => {
-        this.setState({
-            confirmLoading: true,
-        });
-
-        const {title, text} = this.state;
-        const section = Object.assign({}, this.props.section, {title: title, text: text});
-
-        this.props.updateSection(section);
-
-        this.setState({
-            visible: false,
-            confirmLoading: false,
-        });
-    };
-
-    handleCancel = () => {
-        this.setState({
-            visible: false,
-            title: this.props.section.title,
-            text: this.props.section.text
-        });
-    };
-
-    render() {
-        return (
-            <div>
-                <Tooltip title="Edit">
-                    <Button onClick={this.showDrawer}>
-                        <Icon type="edit"/>
-                    </Button>
-                </Tooltip>
-                <Drawer
-                    title={<span><Icon type="edit"/> Edit Section</span>}
-                    width={720}
-                    onClose={this.handleCancel}
-                    visible={this.state.visible}
-                >
-                    <Form layout="vertical" hideRequiredMark>
-                        <Form.Item>
-                            <Input
-                                placeholder="Section Title"
-                                onChange={e => this.setState({title: e.target.value})}
-                                defaultValue={this.props.section.title}
-                                autoFocus
-                            />
-                        </Form.Item>
-                        <Form.Item>
-                            <Input.TextArea
-                                placeholder="Section Text"
-                                onChange={e => this.setState({text: e.target.value})}
-                                defaultValue={this.props.section.text}
-                                autosize={{minRows: 6, maxRows: 24}}
-                            />
-                        </Form.Item>
-                        <Form.Item>
-                            <Button onClick={this.handleCancel} style={{marginRight: 5}}>Cancel</Button>
-                            <Button onClick={this.handleOk} type="primary">Ok</Button>
-                        </Form.Item>
-                    </Form>
-                </Drawer>
-            </div>
-        );
-    }
-}
-
-class DeleteSectionModal extends Component {
-    static propTypes = {
-        section: PropTypes.object.isRequired,
-        deleteSection: PropTypes.func.isRequired,
-    };
-
-    state = {
-        visible: false,
-    };
-
-
-    componentWillUnmount() {
-        this.setState({
-            confirmLoading: false,
-            visible: false
-        });
-    }
-
-    showModal = () => {
-        this.setState({
-            visible: true,
-        });
-    };
-
-    handleOk = () => {
-        this.props.deleteSection(this.props.section);
-
-        this.setState({visible: false})
-    };
-
-    handleCancel = () => {
-        this.setState({
-            visible: false,
-        });
-    };
-
-    render() {
-        const {visible} = this.state;
-
-        return (
-            <div>
-                <Tooltip title="Delete">
-                    <Button
-                        key={`section-list-delete-${this.props.section.section_number}`}
-                        onClick={() => this.showModal()}
-                        type="danger"
-                    >
-                        <Icon type="delete"/>
-                    </Button>
-                </Tooltip>
-                <Modal
-                    title={<span><Icon type="delete"/> Delete Section</span>}
-                    visible={visible}
-                    onOk={this.handleOk}
-                    onCancel={this.handleCancel}
-                    okText="Delete"
-                    okType="danger"
-                    cancelText="Cancel"
-                    destroyOnClose={true}
-                >
-                    <Typography.Paragraph>
-                        Are you sure you want to delete this section?
-                    </Typography.Paragraph>
-                </Modal>
-            </div>
-        );
     }
 }
 

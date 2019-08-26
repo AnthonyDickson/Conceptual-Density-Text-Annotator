@@ -7,7 +7,7 @@ import Documents from "./views/documents";
 import Index from "./views/index";
 import NotFound from "./views/notFound";
 import SideMenu from "./views/sideMenu";
-import {TAG_COLOURS} from "./views/documents/annotation";
+import {TAG_COLOURS} from "./views/documents/documentView/annotation";
 
 
 import './App.css';

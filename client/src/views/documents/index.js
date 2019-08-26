@@ -5,12 +5,14 @@ import PropTypes from "prop-types";
 import TimeAgo from "react-timeago";
 
 
-import {Button, Form, Icon, Input, List, message, Modal, Skeleton, Spin, Tooltip, Typography} from "antd";
+import {Button, Icon, List, Skeleton, Spin, Tooltip} from "antd";
 import NotFound from "../notFound";
-import DocumentView from "./documentView";
+import DocumentView from "./documentView/";
 
 import './index.css';
 import {EditDocumentModal} from "./editDocumentModal";
+import {CreateDocumentModal} from "./createDocumentModal";
+import {DeleteDocumentModal} from "./deleteDocumentModal";
 
 class Documents extends Component {
     static propTypes = {
@@ -137,169 +139,5 @@ class Documents extends Component {
     }
 }
 
-class CreateDocumentModal extends Component {
-    static propTypes = {
-        createDocument: PropTypes.func.isRequired,
-        loading: PropTypes.bool.isRequired,
-    };
-
-    state = {
-        title: '',
-        visible: false,
-        confirmLoading: false,
-    };
-
-    showModal = () => {
-        this.setState({
-            visible: true,
-        });
-    };
-
-    handleOk = () => {
-        this.setState({
-            confirmLoading: true,
-        });
-
-        const document = {title: this.state.title};
-
-        this.props.createDocument(document, (requestOk) => {
-            if (requestOk) {
-                message.success('Document Created');
-            }
-
-            this.setState({
-                visible: !requestOk,
-                confirmLoading: false,
-            });
-        });
-    };
-
-    handleCancel = () => {
-        this.setState({
-            visible: false,
-            title: ''
-        });
-    };
-
-    onChange = e => {
-        this.setState({title: e.target.value})
-    };
-
-    render() {
-        const {visible, confirmLoading, modalText} = this.state;
-        const loading = this.props.loading;
-
-        return (
-            <span>
-                <Button onClick={this.showModal} disabled={loading} type="dashed" style={{margin: '5px 0'}}>
-                    <Icon type="plus"/> Create Document
-                </Button>
-                <Modal
-                    title={<span><Icon type="form"/> Creating Document</span>}
-                    visible={visible}
-                    onOk={this.handleOk}
-                    confirmLoading={confirmLoading}
-                    onCancel={this.handleCancel}
-                >
-                    <Form>
-                        <Form.Item>
-                            <Input
-                                placeholder="Document Title"
-                                onChange={this.onChange}
-                                onPressEnter={this.handleOk}
-                                defaultValue={modalText}
-                                autoFocus
-                            />
-                        </Form.Item>
-                    </Form>
-                </Modal>
-            </span>
-        );
-    }
-}
-
-
-class DeleteDocumentModal extends Component {
-    static propTypes = {
-        document: PropTypes.object.isRequired,
-        deleteDocument: PropTypes.func.isRequired,
-        sideMenuCollapsed: PropTypes.bool.isRequired,
-    };
-
-    state = {
-        visible: false,
-        confirmLoading: false,
-    };
-
-
-    componentWillUnmount() {
-        this.setState({
-            confirmLoading: false,
-            visible: false
-        });
-    }
-
-    showModal = () => {
-        this.setState({
-            visible: true,
-        });
-    };
-
-    handleOk = () => {
-        this.setState({
-            confirmLoading: true,
-        });
-
-        this.props.deleteDocument(this.props.document, (requestOk) => {
-            if (requestOk) {
-                message.success('Document Deleted')
-            }
-            // TODO: Fix error that sometimes happens when deleting documents.
-            this.setState({
-                confirmLoading: false,
-                visible: false
-            });
-        });
-    };
-
-    handleCancel = () => {
-        this.setState({
-            visible: false,
-        });
-    };
-
-    render() {
-        const {visible, confirmLoading} = this.state;
-
-        return (
-            <>
-                <Tooltip title="Delete">
-                    <Button
-                        key={`document-list-delete-${this.props.document.id}`}
-                        onClick={() => this.showModal()}
-                        type="danger"
-                    >
-                        <Icon type="delete"/>
-                    </Button>
-                </Tooltip>
-                <Modal
-                    title={<span><Icon type="delete"/> Delete Document</span>}
-                    visible={visible}
-                    onOk={this.handleOk}
-                    confirmLoading={confirmLoading}
-                    onCancel={this.handleCancel}
-                    okText="Delete"
-                    okType="danger"
-                    cancelText="Cancel"
-                    destroyOnClose={true}
-                >
-                    <Typography.Paragraph>
-                        Are you sure you want to delete this document? This action cannot be undone.
-                    </Typography.Paragraph>
-                </Modal>
-            </>
-        );
-    }
-}
 
 export default Documents;
