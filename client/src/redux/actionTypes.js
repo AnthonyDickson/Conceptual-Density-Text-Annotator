@@ -1,1 +1,2 @@
 export const ADD_DOCUMENT = "ADD_DOCUMENT";
+export const REMOVE_DOCUMENT = "REMOVE_DOCUMENT";

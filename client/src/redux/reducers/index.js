@@ -1,4 +1,4 @@
-import {ADD_DOCUMENT} from "../actionTypes";
+import {ADD_DOCUMENT, REMOVE_DOCUMENT} from "../actionTypes";
 
 const initialState = {
     documents: [],
@@ -20,6 +20,11 @@ function rootReducer(state = initialState, action) {
             return {
                 ...state,
                 documents: state.documents.concat(action.payload)
+            };
+        case REMOVE_DOCUMENT:
+            return {
+                ...state,
+                documents: state.documents.filter(document => document.id !== action.payload.id)
             };
         default:
             return state;
