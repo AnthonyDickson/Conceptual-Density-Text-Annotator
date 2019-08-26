@@ -2,7 +2,7 @@ import React from 'react';
 
 import {Typography} from 'antd';
 
-const NotFound = () => {
+const Index = () => {
     return <Typography>
         <Typography.Title>Hello!</Typography.Title>
         <Typography.Paragraph>
@@ -12,4 +12,4 @@ const NotFound = () => {
     </Typography>
 };
 
-export default NotFound;
+export default Index;
