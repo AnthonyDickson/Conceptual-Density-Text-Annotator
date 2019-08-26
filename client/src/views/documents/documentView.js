@@ -232,15 +232,15 @@ class DocumentView extends Component {
                             <List.Item>
                                 <Typography style={{width: '100%'}}>
                                     <Row>
-                                        <Col sm={{span: 24}} lg={{span: 16}}>
+                                        <Col sm={{span: 24}} md={{span: 16}} lg={{span: 16}}>
                                             <Typography.Title level={2}>
                                                 {item.title}
                                             </Typography.Title>
                                         </Col>
-                                        <Col sm={{span: 24}} lg={{offset: 4, span: 2}}>
+                                        <Col sm={{span: 24}} md={{offset: 2, span: 3}} lg={{offset: 4, span: 2}}>
                                             <EditSectionDrawer section={item} updateSection={updateSection}/>
                                         </Col>
-                                        <Col sm={{span: 24}} lg={{span: 2}}>
+                                        <Col sm={{span: 24}} md={{span: 3}} lg={{span: 2}}>
                                             <DeleteSectionModal section={item} deleteSection={deleteSection}/>
                                         </Col>
                                     </Row>
