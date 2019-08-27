@@ -479,7 +479,13 @@ class App extends Component {
             ...this.state,
             annotations: {
                 ...this.state.annotations,
-                [section.section_number]: annotations
+                [section.section_number]: annotations.map(annotation => {
+                    return {
+                        ...annotation,
+                        document_id: this.state.currentDocument,
+                        section_number: section.section_number
+                    }
+                })
             },
             dirty: true
         };
