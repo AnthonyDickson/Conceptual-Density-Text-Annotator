@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/480-annotator.iml" filepath="$PROJECT_DIR$/.idea/480-annotator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../react-text-annotate/.idea/react-text-annotate.iml" filepath="$PROJECT_DIR$/../react-text-annotate/.idea/react-text-annotate.iml" />
     </modules>
   </component>
 </project>
