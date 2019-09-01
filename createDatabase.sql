@@ -110,7 +110,7 @@ ALTER TABLE `document`
 --
 ALTER TABLE `annotation`
   ADD CONSTRAINT `annotation_document_id_fk` FOREIGN KEY (`document_id`) REFERENCES `document` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `annotation_section_number_fk` FOREIGN KEY (`section_number`) REFERENCES `section` (`section_number`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `annotation_section_fk` FOREIGN KEY (`document_id`,`section_number`) REFERENCES `section` (`document_id`, `section_number`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `section`
