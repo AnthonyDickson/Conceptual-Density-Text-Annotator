@@ -1,3 +1,5 @@
+const builder = require('xmlbuilder');
+
 const connection = require('../connection').pool;
 
 const serverError = (req, res, err) => {
@@ -139,6 +141,114 @@ exports.put_document_by_id = (req, res) => {
                 res.status(200);
                 res.send({message: 'ok'});
             }
+        }
+    )
+};
+
+function createAnnotatedXmlDocument(annotations, document, sections) {
+    const groupBy = function (xs, key) {
+        return xs.reduce(function (rv, x) {
+            (rv[x[key]] = rv[x[key]] || []).push(x);
+            return rv;
+        }, {});
+    };
+
+    const conceptAnnotation = 'concept';
+    const referenceAnnotation = 'reference';
+    const relationAnnotation = 'relation';
+
+    const annotationCategoryMappings = {
+        'A PRIORI': conceptAnnotation,
+        EMERGING: conceptAnnotation,
+        FORWARD: referenceAnnotation,
+        BACKWARD: referenceAnnotation,
+        ENTITY: relationAnnotation,
+        RELATION: relationAnnotation
+    };
+
+    const annotationsBySectionNumber = groupBy(annotations, 'section_number');
+
+    const root = builder.create('document');
+
+    root.ele('title', null, document.title);
+
+    sections.forEach(section => {
+        const sectionElement = root.ele('section');
+        sectionElement.ele('title', null, section.title);
+        sectionElement.ele('text', null, section.text);
+
+        const tokens = section.text.split(/[\s\n\t]|([()"'?!;:,.])/)
+            .filter(str => str !== undefined && str.length > 0);
+
+        const annotationsElement = sectionElement.ele('annotations');
+
+        if (annotationsBySectionNumber[section.section_number]) {
+            for (const annotation of annotationsBySectionNumber[section.section_number]) {
+                const annotationCategory = annotationCategoryMappings[annotation.tag];
+
+                let concatenatedTokens = tokens[annotation.start];
+
+                for (let i = annotation.start + 1; i < annotation.end; i++) {
+                    concatenatedTokens += ' ' + tokens[i];
+                }
+
+                annotationsElement.ele(
+                    annotationCategory,
+                    {tag: annotation.tag},
+                    concatenatedTokens
+                );
+            }
+        }
+    });
+
+    return root.end();
+}
+
+exports.get_annotated_document = (req, res) => {
+    const documentId = req.params.documentId;
+
+    connection.query(
+        `SELECT id, title, date_edited, date_created FROM document WHERE id = ${documentId}`,
+        (err, rows) => {
+            if (err) {
+                serverError(req, res, err);
+                return;
+            }
+
+            if (rows.length === 0) {
+                res.status(404);
+                res.send();
+
+                return;
+            }
+
+            const document = rows[0];
+
+            connection.query(
+                `SELECT document_id, section_number, title, text FROM section WHERE document_id = ${documentId}`,
+                (err, rows) => {
+                    if (err) {
+                        serverError(req, res, err);
+                        return;
+                    }
+
+                    const sections = rows;
+
+                    connection.query(
+                        `SELECT document_id, section_number, start, end, tag FROM annotation WHERE document_id = ${documentId}`,
+                        (err, rows) => {
+                            if (err) {
+                                serverError(req, res, err);
+                                return;
+                            }
+
+                            const xmlDocument = createAnnotatedXmlDocument(rows, document, sections);
+
+                            res.contentType('application/xml');
+                            res.send(xmlDocument);
+                        });
+                }
+            )
         }
     )
 };
@@ -310,8 +420,7 @@ exports.get_document_annotations_by_section_number = (req, res) => {
         WHERE 
             document_id = ${req.params.documentId} 
                 AND 
-            section_number = ${req.params.sectionNumber} 
-            )
+            section_number = ${req.params.sectionNumber}
         `,
         (err, rows) => {
             if (err) {

@@ -10,5 +10,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="react-text-annotate" />
+    <orderEntry type="module" module-name="react-text-annotate" />
+    <orderEntry type="module" module-name="react-text-annotate" />
   </component>
 </module>
