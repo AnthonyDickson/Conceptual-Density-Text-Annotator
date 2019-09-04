@@ -99,6 +99,14 @@ class Documents extends Component {
                         dataSource={documents}
                         renderItem={item => (
                             <List.Item actions={[
+                                <Tooltip title="Download">
+                                    <Button>
+                                        <Link to={`/api/documents/${item.id}/xml`} target="_blank"
+                                              download={`${item.title}.xml`}>
+                                            <Icon type="download"/>
+                                        </Link>
+                                    </Button>
+                                </Tooltip>,
                                 <Spin spinning={item.isCopying === true}>
                                     <Tooltip title="Copy">
                                         <Button onClick={() => this.props.copyDocument(item)}>

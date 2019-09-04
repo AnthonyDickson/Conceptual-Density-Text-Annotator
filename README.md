@@ -1,5 +1,6 @@
 # COSC480 Annotator
 A web-app for annotating documents for my [COSC480 project](https://github.com/eight0153/cosc480).
+The web-app is hosted at [cosc480-document-annotator.herokuapp.com](https://cosc480-document-annotator.herokuapp.com/documents).
 
 ## Getting Started
 1.  Download and install [Node 10.16.3+](https://nodejs.org/en/download/) if you do not have it installed already.
