@@ -25,7 +25,8 @@ const ALL = 'ALL';
 const CONCEPTS = 'CONCEPTS';
 const REFERENCES = 'REFERENCES';
 const RELATIONS = 'RELATIONS';
-const CATEGORIES = [ALL, CONCEPTS, REFERENCES, RELATIONS];
+const NONE = 'NONE';
+const CATEGORIES = [ALL, CONCEPTS, REFERENCES, RELATIONS, NONE];
 
 class DocumentView extends Component {
     static propTypes = {
@@ -85,6 +86,9 @@ class DocumentView extends Component {
             case RELATIONS:
                 nextState.checkedList = [ENTITY, RELATION];
                 break;
+            case NONE:
+                nextState.checkedList = [];
+                break;
             default:
                 // Nothing needs to be done here.
                 break;
@@ -92,75 +96,6 @@ class DocumentView extends Component {
 
         nextState.tag = nextState.checkedList[0];
         this.setState(nextState)
-    };
-
-    annotationsForm = () => {
-        const formLayout = {
-            labelCol: {span: 4},
-            wrapperCol: {span: 20},
-        };
-
-        const annotationTypeRadioButtons = this.state.checkedList.map(option => {
-            return <Radio.Button key={option} value={option}>{option}</Radio.Button>
-        });
-
-        const categoryRadioButtons = CATEGORIES.map(option => {
-            return <Radio.Button key={option} value={option}>{option}</Radio.Button>
-        });
-
-        return (
-            <Affix>
-                <Card>
-                    <Form>
-                        <Collapse accordion defaultActiveKey="1" bordered={false}>
-                            <Collapse.Panel header="Tagging" key="1" style={{borderBottom: 0}}>
-                                <Form.Item label="Filter Tags" {...formLayout}>
-                                    <Radio.Group
-                                        onChange={this.handleCategoryChange}
-                                        defaultValue={ALL}
-                                        value={this.state.category}
-                                    >
-                                        {categoryRadioButtons}
-                                    </Radio.Group>
-                                </Form.Item>
-                                <Form.Item label="Annotation Type" {...formLayout}>
-                                    <Radio.Group
-                                        onChange={this.handleTagChange}
-                                        defaultValue={A_PRIORI_CONCEPT}
-                                        value={this.state.tag}>
-                                        {annotationTypeRadioButtons}
-                                    </Radio.Group>
-                                </Form.Item>
-                            </Collapse.Panel>
-                        </Collapse>
-                        {this.props.dirty ?
-                            <Form.Item>
-                                <Row>
-                                    <Col offset={4}>
-                                        <Prompt
-                                            message="You have unsaved changes which will be lost if you leave this page.
-                                            Press 'Ok' if you are okay with this."
-                                        />
-                                        <Button
-                                            onClick={this.props.saveChanges}
-                                            loading={this.props.saving}
-                                            type="primary"
-                                            style={{marginRight: 10}}>
-                                            Save Changes
-                                        </Button>
-                                        <Button
-                                            onClick={this.props.discardChanges}
-                                            disabled={this.props.saving}>
-                                            Discard Changes
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </Form.Item>
-                            : null}
-                    </Form>
-                </Card>
-            </Affix>
-        );
     };
 
     componentDidMount() {
@@ -208,7 +143,7 @@ class DocumentView extends Component {
 
             return (
                 <div>
-                    {this.annotationsForm(currentDocument)}
+                    {this.AnnotationsForm(currentDocument)}
 
                     <List
                         bordered
@@ -221,31 +156,10 @@ class DocumentView extends Component {
                             </Typography>
                         }
                         renderItem={item => (
-                            <List.Item>
-                                <Typography style={{width: '100%'}}>
-                                    <Row>
-                                        <Col xs={{span: 24}} sm={{span: 16}} md={{span: 16}} lg={{span: 16}}>
-                                            <Typography.Title level={2}>
-                                                {item.title}
-                                            </Typography.Title>
-                                        </Col>
-                                        <Col xs={{span: 24}} sm={{offset: 4, span: 2}} md={{offset: 4, span: 2}}
-                                             lg={{offset: 6, span: 1}}>
-                                            <EditSectionDrawer section={item} updateSection={updateSection}/>
-                                        </Col>
-                                        <Col xs={{span: 24}} sm={{span: 2}} md={{span: 2}} lg={{span: 1}}>
-                                            <DeleteSectionModal section={item} deleteSection={deleteSection}/>
-                                        </Col>
-                                    </Row>
-                                    <Annotation
-                                        section={item}
-                                        tag={tag}
-                                        enabledTags={checkedList}
-                                        annotations={annotations[item.section_number]}
-                                        updateAnnotations={updateAnnotations}
-                                    />
-                                </Typography>
-                            </List.Item>
+                            this.Section(item,
+                                updateSection, deleteSection,
+                                tag, checkedList,
+                                annotations, updateAnnotations)
                         )}
                         footer={
                             <Button onClick={this.props.addSection} type="dashed" style={{margin: '5px'}}>
@@ -258,6 +172,117 @@ class DocumentView extends Component {
         } else {
             return NotFound();
         }
+    }
+
+    AnnotationsForm = () => {
+        const formLayout = {
+            labelCol: {span: 4},
+            wrapperCol: {span: 20},
+        };
+
+        const annotationTypeRadioButtons = this.state.checkedList.map(option => {
+            return <Radio.Button key={option} value={option}>{option}</Radio.Button>
+        });
+
+        const categoryRadioButtons = CATEGORIES.map(option => {
+            return <Radio.Button key={option} value={option}>{option}</Radio.Button>
+        });
+
+        return (
+            <Affix>
+                <Card>
+                    <Form>
+                        <Collapse accordion defaultActiveKey="1" bordered={false}>
+                            <Collapse.Panel header="Annotation Controls" key="1" style={{borderBottom: 0}}>
+                                <Form.Item label="View Annotation Types" {...formLayout}>
+                                    <Radio.Group
+                                        onChange={this.handleCategoryChange}
+                                        defaultValue={ALL}
+                                        value={this.state.category}
+                                    >
+                                        {categoryRadioButtons}
+                                    </Radio.Group>
+                                </Form.Item>
+                                {this.state.category !== NONE ?
+                                    (
+                                        <Form.Item label="Select Annotation Type" {...formLayout}>
+                                            <Radio.Group
+                                                onChange={this.handleTagChange}
+                                                defaultValue={A_PRIORI_CONCEPT}
+                                                value={this.state.tag}>
+                                                {annotationTypeRadioButtons}
+                                            </Radio.Group>
+                                        </Form.Item>
+                                    ) : null
+                                }
+                            </Collapse.Panel>
+                        </Collapse>
+                        {this.props.dirty ?
+                            <Form.Item>
+                                <Row>
+                                    <Col offset={4}>
+                                        <Prompt
+                                            message="You have unsaved changes which will be lost if you leave this page.
+                                            Press 'Ok' if you are okay with this."
+                                        />
+                                        <Button
+                                            onClick={this.props.saveChanges}
+                                            loading={this.props.saving}
+                                            type="primary"
+                                            style={{marginRight: 10}}>
+                                            Save Changes
+                                        </Button>
+                                        <Button
+                                            onClick={this.props.discardChanges}
+                                            disabled={this.props.saving}>
+                                            Discard Changes
+                                        </Button>
+                                    </Col>
+                                </Row>
+                            </Form.Item>
+                            : null}
+                    </Form>
+                </Card>
+            </Affix>
+        );
+    };
+
+    Section = (item, updateSection, deleteSection, tag, checkedList, annotations, updateAnnotations) => {
+        return (
+            <List.Item>
+                <Typography style={{width: '100%'}}>
+                    <Row>
+                        <Col xs={{span: 24}} sm={{span: 16}} md={{span: 16}} lg={{span: 16}}>
+                            <Typography.Title level={2}>
+                                {item.title}
+                            </Typography.Title>
+                        </Col>
+                        <Col xs={{span: 24}} sm={{offset: 4, span: 2}} md={{offset: 4, span: 2}}
+                             lg={{offset: 6, span: 1}}>
+                            <EditSectionDrawer section={item} updateSection={updateSection}/>
+                        </Col>
+                        <Col xs={{span: 24}} sm={{span: 2}} md={{span: 2}} lg={{span: 1}}>
+                            <DeleteSectionModal section={item} deleteSection={deleteSection}/>
+                        </Col>
+                    </Row>
+                    {
+                        this.state.category !== NONE ? (
+                            <Annotation
+                                section={item}
+                                tag={tag}
+                                enabledTags={checkedList}
+                                annotations={annotations[item.section_number]}
+                                updateAnnotations={updateAnnotations}
+                            />
+                        ) : (
+                            <Typography.Paragraph>
+                                {item.text}
+                            </Typography.Paragraph>
+                        )
+                    }
+                </Typography>
+            </List.Item>
+        );
     }
 }
 
