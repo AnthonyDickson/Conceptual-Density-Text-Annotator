@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3458618.svg)](https://doi.org/10.5281/zenodo.3458618)
+
 # COSC480 Annotator
 A web-app for annotating documents for my [COSC480 project](https://github.com/eight0153/cosc480).
 The web-app is hosted at [cosc480-document-annotator.herokuapp.com](https://cosc480-document-annotator.herokuapp.com/documents).
